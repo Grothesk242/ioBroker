@@ -8,15 +8,15 @@ then
         echo "";
         elif [ "$(id -u)" = 0 ];
                 then
-                        echo -e "You should not be root user on your system!\nBetter use a standard user! Root delay of 15 seconds!\n\n";
-                        sleep 15;
-fi
+                        echo -e "You should not use root directly on your system!\nBetter use your standard user!\n\n";
+                        sleep 5;
 
+fi
 clear;
 echo "*** iob diag is starting up, please wait ***";
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2023-10-25";      #version of this script
+SKRIPTV="2023-10-18";      #version of this script
 NODE_MAJOR=18           #this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 
 HOST=$(hostname)
@@ -148,7 +148,7 @@ else
       bit_n=$((bit_n+1))
     fi
   done
-fi;
+fi
 
 echo ""
 
@@ -193,11 +193,11 @@ echo "";
 echo -e "\033[34;107m*** User and Groups ***\033[0m";
         whoami;
         echo "$HOME";
-        groups; 
+        groups;
 echo "";
 
 echo -e "\033[34;107m*** X-Server-Setup ***\033[0m";
-XORGTEST=$(pgrep -fc 'Xorg|ayland|X11')
+XORGTEST=$(pgrep -c 'Xorg|wayland|X11|wayfire')
 if [[ "$XORGTEST" -gt 0 ]];
         then
                 echo -e "X-Server: \ttrue"
@@ -223,6 +223,9 @@ if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
         echo "Raspberry only:";
         vcgencmd mem_oom;
 fi;
+echo "";
+echo -e "\033[34;107m*** top - Table Of Processes  ***\033[0m";
+top -b -n 1 | head -n 5;
 
 if [ -f "$DOCKER" ]; then
 echo "";
@@ -237,12 +240,7 @@ echo -e "\033[34;107m*** FILESYSTEM ***\033[0m";
         df -PTh;
 echo "";
 echo -e "\033[32mMessages concerning ext4 filesystem in dmesg:\033[0m";
-if [ "$SYSTDDVIRT" = "lxc" ] || [ -f "$DOCKER" ]; then
-    echo "Check not possible in LXC or Docker"
-else
-    sudo dmesg -T | grep -i ext4;
-fi;
-
+sudo dmesg -T | grep -i ext4;
 echo "";
 echo -e "\033[32mShow mounted filesystems:\033[0m";
 findmnt;
@@ -275,7 +273,7 @@ echo "";
 echo -e "\033[32mUSB-Devices by-id:\033[0m";
 echo "USB-Sticks -  Avoid direct links to /dev/* in your adapter setups, please always prefer the links 'by-id':";
 echo "";
-find /dev/serial/by-id/ -maxdepth 1 -mindepth 1 2>/dev/null ;             
+find /dev/serial/by-id/ -maxdepth 1 -mindepth 1;
 echo "";
 
 echo -e "\033[34;107m*** NodeJS-Installation ***\033[0m";
@@ -296,44 +294,42 @@ VERNODE=$(node -v);
 VERNPM=$(npm -v);
 VERNPX=$(npx -v);
 #VERCOREPACK=$(corepack -v);
-NOTCORRSTRG="\n\033[0;31m*** nodejs is NOT correctly installed ***\033[0m\nRun \e[031iob nodejs-update\e[0m to fix it. ";
-
 
 if
         [[ $PATHNODEJS != "/usr/bin/nodejs" ]];
         then
                 NODENOTCORR=1
-                echo -e "$NOTCORRSTRG";
+                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
         elif
         [[ $PATHNODE != "/usr/bin/node" ]];
         then
                 NODENOTCORR=1
-                echo -e "$NOTCORRSTRG";
+                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
         elif
         [[ $PATHNPM != "/usr/bin/npm" ]];
         then
                 NODENOTCORR=1
-                echo -e "$NOTCORRSTRG";
+                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
         elif
         [[ $PATHNPX != "/usr/bin/npx" ]];
         then
                 NODENOTCORR=1
-                echo -e "$NOTCORRSTRG";
+                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
         elif
         [[ $VERNODEJS != "$VERNODE" ]];
         then
                 NODENOTCORR=1
-                echo -e "$NOTCORRSTRG";
+                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
         elif
         [[ $VERNPM != "$VERNPX" ]];
         then
                 NODENOTCORR=1
-                echo -e "$NOTCORRSTRG";
+                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
         elif
         [[ $PATHCOREPACK != "/usr/bin/corepack" ]];
         then
                 NODENOTCORR=1
-                echo -e "$NOTCORRSTRG";
+                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
 else
                 echo "";
 fi
@@ -408,13 +404,9 @@ echo -e "Pending Updates: $APT";
 echo "";
 
 echo -e "\033[34;107m*** Listening Ports ***\033[0m";
-
-if [[ $(type -P "ss" 2>/dev/null) = *"/ss" ]]; 
-        then 
-                sudo ss -tulpn
-        else
-                sudo netstat -tulpen
-fi;
+        sudo netstat -tulpen #| sed -n '1,2p;/LISTEN/p';
+# Alternativ - ss ist nicht ueberall installiert
+# sudo ss -tulwp | grep LISTEN;
 echo "";
 echo -e "\033[34;107m*** Log File - Last 25 Lines ***\033[0m";
 echo "";
@@ -546,8 +538,7 @@ then
                 echo "";
                 echo "Please check";
                 echo "https://forum.iobroker.net/topic/35090/howto-nodejs-installation-und-upgrades-unter-debian";
-                echo "for more information on how to fix these errors or run:";
-                echo "iobroker nodejs-update";
+                echo "for more information on how to fix these errors."
 fi;
 echo "";
 # echo -e "Total Memory: \t\t`free -h | awk '/^Mem:/{print $2}'`";
