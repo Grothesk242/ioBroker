@@ -811,9 +811,7 @@ install_nodejs() {
             rm /etc/apt/keyrings/nodesource.gpg 2>&1 > /dev/null
             curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
             echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
-			echo "Package: nodejs" | tee /etc/apt/preferences.d/nodejs.pref
-			echo "Pin: origin deb.nodesource.com" | tee -a /etc/apt/preferences.d/nodejs.pref
-			echo "Pin-Priority: 1001" | tee -a /etc/apt/preferences.d/nodejs.pref
+	    echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | tee /etc/apt/preferences.d/nodejs.pref
 		else
 			$SUDOX $INSTALL_CMD update 2>&1 > /dev/null
             $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS ca-certificates curl gnupg 2>&1 > /dev/null
@@ -821,9 +819,7 @@ install_nodejs() {
             $SUDOX rm /etc/apt/keyrings/nodesource.gpg 2>&1 > /dev/null
             curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | $SUDOX gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
             echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list
-			echo "Package: nodejs" | sudo tee /etc/apt/preferences.d/nodejs.pref
-			echo "Pin: origin deb.nodesource.com" | sudo tee -a /etc/apt/preferences.d/nodejs.pref
-			echo "Pin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/nodejs.pref
+	    echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/nodejs.pref
 		fi
 	fi
 	install_package nodejs
