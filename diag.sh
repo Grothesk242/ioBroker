@@ -16,26 +16,26 @@ if [[ "$SKRPTLANG" = "--de" ]]; then
                 echo "*** iob diag is starting up, please wait ***";
 fi;
 
-if ! [ -x "$(command -v distro-info)" ]; then
-        if [[ "$SKRPTLANG" == "--de" ]]; then
-                if [ -x "$(command -v apt-get)" ]; then
-                echo "iob diag muss aktualisiert werden. Bitte dazu zunächst 'iobroker fix' ausführen.";
-                else echo "iob diag muss aktualisiert werden. Bitte das Paket 'distro-info' nachinstallieren.";
-                exit 1;
-                fi;
-        else
-                if [ -x "$(command -v apt-get)" ]; then
-                echo "iob diag needs to be updated. Please execute 'iobroker fix' first.";
-
-                else echo "iob diag needs to be updated. Please manually install package 'distro-info'";
-                exit 1;
-                fi;
-        fi;
-fi;
+# if ! [ -x "$(command -v distro-info)" ]; then
+#         if [[ "$SKRPTLANG" == "--de" ]]; then
+#                 if [ -x "$(command -v apt-get)" ]; then
+#                 echo "iob diag muss aktualisiert werden. Bitte dazu zunächst 'iobroker fix' ausführen.";
+#                 else echo "iob diag muss aktualisiert werden. Bitte das Paket 'distro-info' nachinstallieren.";
+#                 exit 1;
+#                 fi;
+#         else
+#                 if [ -x "$(command -v apt-get)" ]; then
+#                 echo "iob diag needs to be updated. Please execute 'iobroker fix' first.";
+#
+#                 else echo "iob diag needs to be updated. Please manually install package 'distro-info'";
+#                 exit 1;
+#                 fi;
+#         fi;
+# fi;
 
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2024-10-19";      #version of this script
+SKRIPTV="2024-10-26 Raspbian";      #version of this script
 #NODE_MAJOR=20           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT="";
 if [ "$*" = "--allow-root" ];then ALLOWROOT=$"--allow-root"; fi;
