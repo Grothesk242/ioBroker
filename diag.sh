@@ -604,6 +604,11 @@ if [[ -n "$SYSZIGBEEPORT" ]];
                 echo "No Devices found 'by-id'";
 fi;
 
+echo "";
+echo -e "\033[34;107m*** ZigBee Settings ***\033[0m";
+echo "";
+
+
 if  [[ -n "$IOBZIGBEEPORT0" ]]; then
         if [[ "$SYSZIGBEEPORT" == *"$IOBZIGBEEPORT0"* ]]
         then
