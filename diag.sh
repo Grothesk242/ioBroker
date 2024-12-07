@@ -35,7 +35,7 @@ fi;
 
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2024-10-26 Raspbian";      #version of this script
+SKRIPTV="2024-12-07 Raspbian+zigbee diag";      #version of this script
 #NODE_MAJOR=20           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT="";
 if [ "$*" = "--allow-root" ];then ALLOWROOT=$"--allow-root"; fi;
@@ -656,6 +656,23 @@ if  [[ -n "$IOBZIGBEEPORT3" ]]; then
                 # diff -y --left-column <(echo "$IOBZIGBEEPORT0") <(echo "$SYSZIGBEEPORT");
         fi;
 fi;
+
+if [[ -f /opt/iobroker/iobroker-data/zigbee_0/nvbackup.json ]]; then
+echo "Zigbee Network Settings on your coordinator/in nvbackup are:";
+echo "";
+echo "Extended Pan ID:";
+grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_0/nvbackup.json | cut -c 23-38;
+echo "OR";
+grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_0/nvbackup.json | cut -c 23-38 | tac -rs .. | tr -d '\n';
+echo -e "\nPan ID:";
+printf "%d" 0x"$(grep \"pan_id\" /opt/iobroker/iobroker-data/zigbee_0/nvbackup.json | cut -c 14-17)";
+echo -e "\nChannel:";
+grep \"channel\" /opt/iobroker/iobroker-data/zigbee_0/nvbackup.json | cut -c 14-15;
+echo "Network Key:";
+grep \"key\" /opt/iobroker/iobroker-data/zigbee_0/nvbackup.json | cut -c 13-44;
+fi;
+
+
 
 echo "";
 echo -e "\033[34;107m*** NodeJS-Installation ***\033[0m";
