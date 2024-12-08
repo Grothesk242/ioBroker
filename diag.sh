@@ -623,10 +623,6 @@ if  [[ -n "$IOBZIGBEEPORT0" ]]; then
         then
                 echo "";
                 echo "Your zigbee.0 COM-Port is matching 'by-id'. Very good!";
-                ##DEBUG
-                echo $SYSZIGBEEPORT;
-                echo $IOBZIGBEEPORT0;
-                echo;
         else
                 echo;
                 echo "HINT:";
