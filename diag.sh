@@ -636,7 +636,7 @@ if  [[ -n "$IOBZIGBEEPORT0" ]]; then
         fi;
 fi;
 if  [[ -n "$IOBZIGBEEPORT1" ]]; then
-        if [[ "$SYSZIGBEEPORT" == *"$IOBZIGBEEPORT1"* ]]
+        if [ "$SYSZIGBEEPORT" = "$IOBZIGBEEPORT1" ]
         then
                 echo "";
                 echo "Your zigBee.1 COM-Port is matching 'by-id'. Very good!";
@@ -649,7 +649,7 @@ if  [[ -n "$IOBZIGBEEPORT1" ]]; then
         fi;
 fi;
 if  [[ -n "$IOBZIGBEEPORT2" ]]; then
-        if [[ "$SYSZIGBEEPORT" == *"$IOBZIGBEEPORT2"* ]]
+        if [ "$SYSZIGBEEPORT" = "$IOBZIGBEEPORT2" ]
         then
                 echo "";
                 echo "Your zigBee.2 COM-Port is matching 'by-id'. Very good!";
@@ -662,7 +662,7 @@ if  [[ -n "$IOBZIGBEEPORT2" ]]; then
         fi;
 fi;
 if  [[ -n "$IOBZIGBEEPORT3" ]]; then
-        if [[ "$SYSZIGBEEPORT" == *"$IOBZIGBEEPORT3"* ]]
+        if [ "$SYSZIGBEEPORT" = "$IOBZIGBEEPORT3" ]
         then
                 echo "";
                 echo "Your zigbee.3 COM-Port is matching 'by-id'. Very good!";
