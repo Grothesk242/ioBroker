@@ -701,9 +701,9 @@ grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_0/nvbackup.json | cut -c
 #grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_0/nvbackup.json | cut -c 23-38 | tac -rs .. | tr -d '\n';
 echo -e "\nPan ID:";
 printf "%d" 0x"$(grep \"pan_id\" /opt/iobroker/iobroker-data/zigbee_0/nvbackup.json | cut -c 14-17)";
-echo -e "\nChannel:";
+echo -e "\n\nChannel:";
 grep \"channel\" /opt/iobroker/iobroker-data/zigbee_0/nvbackup.json | cut -c 14-15;
-echo "Network Key:";
+echo -e "\nNetwork Key:";
 grep \"key\" /opt/iobroker/iobroker-data/zigbee_0/nvbackup.json | cut -c 13-44;
 fi;
 
@@ -718,9 +718,9 @@ grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_1/nvbackup.json | cut -c
 #grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_1/nvbackup.json | cut -c 23-38 | tac -rs .. | tr -d '\n';
 echo -e "\nPan ID:";
 printf "%d" 0x"$(grep \"pan_id\" /opt/iobroker/iobroker-data/zigbee_1/nvbackup.json | cut -c 14-17)";
-echo -e "\nChannel:";
+echo -e "\n\nChannel:";
 grep \"channel\" /opt/iobroker/iobroker-data/zigbee_1/nvbackup.json | cut -c 14-15;
-echo "Network Key:";
+echo -e "\nNetwork Key:";
 grep \"key\" /opt/iobroker/iobroker-data/zigbee_1/nvbackup.json | cut -c 13-44;
 fi;
 
@@ -735,9 +735,9 @@ grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_2/nvbackup.json | cut -c
 #grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_2/nvbackup.json | cut -c 23-38 | tac -rs .. | tr -d '\n';
 echo -e "\nPan ID:";
 printf "%d" 0x"$(grep \"pan_id\" /opt/iobroker/iobroker-data/zigbee_2/nvbackup.json | cut -c 14-17)";
-echo -e "\nChannel:";
+echo -e "\n\nChannel:";
 grep \"channel\" /opt/iobroker/iobroker-data/zigbee_2/nvbackup.json | cut -c 14-15;
-echo "Network Key:";
+echo -e "\nNetwork Key:";
 grep \"key\" /opt/iobroker/iobroker-data/zigbee_2/nvbackup.json | cut -c 13-44;
 fi;
 
@@ -752,9 +752,9 @@ grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_3/nvbackup.json | cut -c
 #grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_3/nvbackup.json | cut -c 23-38 | tac -rs .. | tr -d '\n';
 echo -e "\nPan ID:";
 printf "%d" 0x"$(grep \"pan_id\" /opt/iobroker/iobroker-data/zigbee_3/nvbackup.json | cut -c 14-17)";
-echo -e "\nChannel:";
+echo -e "\n\nChannel:";
 grep \"channel\" /opt/iobroker/iobroker-data/zigbee_3/nvbackup.json | cut -c 14-15;
-echo "Network Key:";
+echo -e "\nNetwork Key:";
 grep \"key\" /opt/iobroker/iobroker-data/zigbee_3/nvbackup.json | cut -c 13-44;
 fi;
 fi;
