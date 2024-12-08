@@ -103,10 +103,11 @@ echo "Just copy and paste the Summary Page, including the \`\`\` characters at s
 echo "It helps us to help you!"
 if [[ "$MASKED" != "unmasked" ]]; then
 echo ""
-echo "Some output is masked. For full results please use 'iob diag --unmask'"
-echo "";
+echo "**************************************************************************"
+echo "* Some output is masked. For full results please use 'iob diag --unmask' *"
+echo "**************************************************************************"
 fi;
-echo "Press any key to continue";
+echo -e "\nPress any key to continue";
 read -r -n 1 -s
         clear;
 echo "";
