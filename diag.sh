@@ -35,10 +35,12 @@ fi;
 
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2024-12-07 Raspbian+zigbee diag_1";      #version of this script
+SKRIPTV="2024-12-07 Raspbian+zigbee diag+masking";      #version of this script
 #NODE_MAJOR=20           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT="";
 if [ "$*" = "--allow-root" ];then ALLOWROOT=$"--allow-root"; fi;
+MASKED="";
+if [ "$*" = "--unmask" ];then MASKED=$"unmasked"; fi;
 HOST=$(uname -n);
 ID_LIKE=$(awk -F= '$1=="ID_LIKE" { print $2 ;}' /etc/os-release | xargs);
 NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext $ALLOWROOT);  #recommended node version
@@ -78,6 +80,9 @@ echo "https://forum.iobroker.net";
 echo "";
 echo "Bitte die vollständige Ausgabe, einschließlich der \`\`\` Zeichen am Anfang und am Ende markieren und kopieren.";
 echo "Es hilft beim helfen!"
+if [[ "$MASKED" != "unmasked" ]]; then
+echo ""
+echo "Einige Testergebnisse sind maskiert. Um alle Ausgaben zu sehen bitte 'iob diag --unmask' aufrufen."
 echo "";
      # read -p "Press <Enter> to continue";
 echo "Bitte eine Taste drücken";
@@ -96,6 +101,9 @@ echo "https://forum.iobroker.net";
 echo "";
 echo "Just copy and paste the Summary Page, including the \`\`\` characters at start and end.";
 echo "It helps us to help you!"
+if [[ "$MASKED" != "unmasked" ]]; then
+echo ""
+echo "Some output is masked. For full results please use 'iob diag --unmask'"
 echo "";
      # read -p "Press <Enter> to continue";
 echo "Press any key to continue";
