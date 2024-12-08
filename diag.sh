@@ -40,7 +40,7 @@ SKRIPTV="2024-12-08 Raspbian+zigbee diag+masking";      #version of this script
 ALLOWROOT="";
 if [ "$*" = "--allow-root" ];then ALLOWROOT=$"--allow-root"; fi;
 MASKED="";
-if [ "$*" = "--unmask" ];then MASKED="unmasked"; fi;
+if [[ "$*" = *--unmask* ]];then MASKED="unmasked"; fi;
 HOST=$(uname -n);
 ID_LIKE=$(awk -F= '$1=="ID_LIKE" { print $2 ;}' /etc/os-release | xargs);
 NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext $ALLOWROOT);  #recommended node version
@@ -81,11 +81,11 @@ echo "";
 echo "Bitte die vollständige Ausgabe, einschließlich der \`\`\` Zeichen am Anfang und am Ende markieren und kopieren.";
 echo "Es hilft beim helfen!"
 if [[ "$MASKED" != "unmasked" ]]; then
-echo ""
-echo "Einige Testergebnisse sind maskiert. Um alle Ausgaben zu sehen bitte 'iob diag --unmask' aufrufen."
+echo "masked: \"$MASKED\"";
+echo "Einige Testergebnisse sind maskiert. Um alle Ausgaben zu sehen bitte 'iob diag --unmask' aufrufen.";
 echo "";
 fi;
-echo "Bitte eine Taste drücken";
+echo -e "\nBitte eine Taste drücken";
 read -r -n 1 -s
         clear;
 echo "";
@@ -613,8 +613,9 @@ if [[ -n "$SYSZIGBEEPORT" ]];
 fi;
 
 echo "";
+if [ -d /opt/iobroker/iobroker-data/zigbee_* ]; then
 echo -e "\033[34;107m*** ZigBee Settings ***\033[0m";
-
+fi;
 
 if  [[ -n "$IOBZIGBEEPORT0" ]]; then
         if [[ "$SYSZIGBEEPORT" == *"$IOBZIGBEEPORT0"* ]]
@@ -668,6 +669,24 @@ if  [[ -n "$IOBZIGBEEPORT3" ]]; then
                 # diff -y --left-column <(echo "$IOBZIGBEEPORT0") <(echo "$SYSZIGBEEPORT");
         fi;
 fi;
+
+
+#masked
+if [[ "$MASKED" != "unmasked" ]] && [ -d /opt/iobroker/iobroker-data/zigbee_* ]; then
+echo "Zigbee Network Settings on your coordinator/in nvbackup are:";
+echo "";
+echo "zigbee.0"
+echo "Extended Pan ID:";
+echo "*** MASKED ***";
+echo "OR";
+echo "*** MASKED ***";
+echo -e "\nPan ID:";
+echo "*** MASKED ***";
+echo -e "\nChannel:";
+echo "*** MASKED ***";
+echo "Network Key:";
+echo "*** MASKED ***";
+else
 
 # zigbee.0
 if [[ -f /opt/iobroker/iobroker-data/zigbee_0/nvbackup.json ]]; then
@@ -736,7 +755,7 @@ grep \"channel\" /opt/iobroker/iobroker-data/zigbee_3/nvbackup.json | cut -c 14-
 echo "Network Key:";
 grep \"key\" /opt/iobroker/iobroker-data/zigbee_3/nvbackup.json | cut -c 13-44;
 fi;
-
+fi;
 echo "";
 echo -e "\033[34;107m*** NodeJS-Installation ***\033[0m";
 echo "";
