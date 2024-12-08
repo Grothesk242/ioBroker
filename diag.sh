@@ -35,7 +35,7 @@ fi;
 
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2024-12-07 Raspbian+zigbee diag+masking";      #version of this script
+SKRIPTV="2024-12-08 Raspbian+zigbee diag+masking";      #version of this script
 #NODE_MAJOR=20           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT="";
 if [ "$*" = "--allow-root" ];then ALLOWROOT=$"--allow-root"; fi;
