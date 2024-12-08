@@ -671,21 +671,22 @@ if  [[ -n "$IOBZIGBEEPORT3" ]]; then
 fi;
 
 
-#masked
+# masked output
 if [[ "$MASKED" != "unmasked" ]] && [ -d /opt/iobroker/iobroker-data/zigbee_* ]; then
 echo "Zigbee Network Settings on your coordinator/in nvbackup are:";
 echo "";
 echo "zigbee.0"
 echo "Extended Pan ID:";
 echo "*** MASKED ***";
-echo "OR";
-echo "*** MASKED ***";
+#echo "OR";
+#echo "*** MASKED ***";
 echo -e "\nPan ID:";
 echo "*** MASKED ***";
 echo -e "\nChannel:";
 echo "*** MASKED ***";
 echo "Network Key:";
 echo "*** MASKED ***";
+echo -e "\nTo unmask the settings run 'iob diag --unmask'\n"
 else
 
 # zigbee.0
@@ -695,8 +696,8 @@ echo "";
 echo "zigbee.0"
 echo "Extended Pan ID:";
 grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_0/nvbackup.json | cut -c 23-38;
-echo "OR";
-grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_0/nvbackup.json | cut -c 23-38 | tac -rs .. | tr -d '\n';
+#echo "OR";
+#grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_0/nvbackup.json | cut -c 23-38 | tac -rs .. | tr -d '\n';
 echo -e "\nPan ID:";
 printf "%d" 0x"$(grep \"pan_id\" /opt/iobroker/iobroker-data/zigbee_0/nvbackup.json | cut -c 14-17)";
 echo -e "\nChannel:";
@@ -712,8 +713,8 @@ echo "";
 echo "zigbee.1"
 echo "Extended Pan ID:";
 grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_1/nvbackup.json | cut -c 23-38;
-echo "OR";
-grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_1/nvbackup.json | cut -c 23-38 | tac -rs .. | tr -d '\n';
+#echo "OR";
+#grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_1/nvbackup.json | cut -c 23-38 | tac -rs .. | tr -d '\n';
 echo -e "\nPan ID:";
 printf "%d" 0x"$(grep \"pan_id\" /opt/iobroker/iobroker-data/zigbee_1/nvbackup.json | cut -c 14-17)";
 echo -e "\nChannel:";
@@ -729,8 +730,8 @@ echo "";
 echo "zigbee.2"
 echo "Extended Pan ID:";
 grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_2/nvbackup.json | cut -c 23-38;
-echo "OR";
-grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_2/nvbackup.json | cut -c 23-38 | tac -rs .. | tr -d '\n';
+#echo "OR";
+#grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_2/nvbackup.json | cut -c 23-38 | tac -rs .. | tr -d '\n';
 echo -e "\nPan ID:";
 printf "%d" 0x"$(grep \"pan_id\" /opt/iobroker/iobroker-data/zigbee_2/nvbackup.json | cut -c 14-17)";
 echo -e "\nChannel:";
@@ -746,8 +747,8 @@ echo "";
 echo "zigbee.3"
 echo "Extended Pan ID:";
 grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_3/nvbackup.json | cut -c 23-38;
-echo "OR";
-grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_3/nvbackup.json | cut -c 23-38 | tac -rs .. | tr -d '\n';
+#echo "OR";
+#grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_3/nvbackup.json | cut -c 23-38 | tac -rs .. | tr -d '\n';
 echo -e "\nPan ID:";
 printf "%d" 0x"$(grep \"pan_id\" /opt/iobroker/iobroker-data/zigbee_3/nvbackup.json | cut -c 14-17)";
 echo -e "\nChannel:";
