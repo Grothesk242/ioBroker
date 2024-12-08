@@ -684,7 +684,7 @@ echo -e "\nPan ID:";
 echo "*** MASKED ***";
 echo -e "\nChannel:";
 echo "*** MASKED ***";
-echo "Network Key:";
+echo -e "\nNetwork Key:";
 echo "*** MASKED ***";
 echo -e "\nTo unmask the settings run 'iob diag --unmask'\n"
 else
