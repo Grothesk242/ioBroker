@@ -696,7 +696,7 @@ else
 
 # zigbee.0
 if [[ -f /opt/iobroker/iobroker-data/zigbee_0/nvbackup.json ]]; then
-echo "Zigbee Network Settings on your coordinator/in nvbackup are:";
+echo -e "\nZigbee Network Settings on your coordinator/in nvbackup are:";
 echo "";
 echo "zigbee.0"
 echo "Extended Pan ID:";
@@ -713,7 +713,7 @@ fi;
 
 # zigbee.1
 if [[ -f /opt/iobroker/iobroker-data/zigbee_1/nvbackup.json ]]; then
-echo "Zigbee Network Settings on your coordinator/in nvbackup are:";
+echo -e "\nZigbee Network Settings on your coordinator/in nvbackup are:";
 echo "";
 echo "zigbee.1"
 echo "Extended Pan ID:";
@@ -730,7 +730,7 @@ fi;
 
 # zigbee.2
 if [[ -f /opt/iobroker/iobroker-data/zigbee_2/nvbackup.json ]]; then
-echo "Zigbee Network Settings on your coordinator/in nvbackup are:";
+echo -e "\nZigbee Network Settings on your coordinator/in nvbackup are:";
 echo "";
 echo "zigbee.2"
 echo "Extended Pan ID:";
@@ -747,7 +747,7 @@ fi;
 
 # zigbee.3
 if [[ -f /opt/iobroker/iobroker-data/zigbee_3/nvbackup.json ]]; then
-echo "Zigbee Network Settings on your coordinator/in nvbackup are:";
+echo -e "\nZigbee Network Settings on your coordinator/in nvbackup are:";
 echo "";
 echo "zigbee.3"
 echo "Extended Pan ID:";
