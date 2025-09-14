@@ -45,7 +45,7 @@ fi
 
 # VARIABLES
 export LC_ALL=C
-SKRIPTV="2025-08-09" #version of this script
+SKRIPTV="2025-09-14" #version of this script
 #NODE_MAJOR=22           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT=""
 if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi
@@ -682,9 +682,9 @@ if [[ -n "$IOBZIGBEEPORT3" ]]; then
     fi
 fi
 # masked output
-
-for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json; do
-    if [[ "$MASKED" != "unmasked" ]]; then
+if [[ -n "$SYSZIGBEEPORT" ]]; then
+    for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json; do
+        if [[ "$MASKED" != "unmasked" ]]; then
         echo "Zigbee Network Settings on your coordinator/in nvbackup are:"
         echo ""
         echo "zigbee.X"
@@ -700,8 +700,9 @@ for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json; do
         echo "*** MASKED ***"
         echo -e "\nTo unmask the settings run 'iob diag --unmask'\n"
         break
-    fi
-done
+        fi
+    done
+fi
 
 for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json; do
     if [[ "$MASKED" = "unmasked" ]]; then
