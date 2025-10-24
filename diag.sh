@@ -45,7 +45,7 @@ fi
 
 # VARIABLES
 export LC_ALL=C
-SKRIPTV="2025-08-09" #version of this script
+SKRIPTV="2025-10-24" #version of this script
 #NODE_MAJOR=22           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT=""
 if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi
@@ -446,7 +446,7 @@ if [[ "$SKRPTLANG" = "--de" ]]; then
         # Prompt for username
         echo "Es sollte ein Standarduser angelegt werden! Dieser user kann auch mittels 'sudo' temporär root-Rechte erlangen."
         echo "Ein permanentes Login als root ist nicht vorgesehen."
-        echo "Bitte den 'iobroker fix' ausführen oder manuell eine entsprechenden User anlegen."
+        echo "Bitte den 'iobroker fix' ausführen oder manuell einen entsprechenden User anlegen."
 
     fi
 else
@@ -726,7 +726,6 @@ PATHNODEJS=$(type -P nodejs)
 PATHNODE=$(type -P node)
 PATHNPM=$(type -P npm)
 PATHNPX=$(type -P npx)
-PATHCOREPACK=$(type -P corepack)
 
 if [[ -z "$PATHNODEJS" ]]; then
     echo -e "nodejs: \t\tN/A"
@@ -756,14 +755,6 @@ if [[ -z "$PATHNPX" ]]; then
 else
     echo -e "$(type -P npx) \t\t$(npx -v)"
     VERNPX=$(npx -v)
-fi
-
-if [[ -z "$PATHCOREPACK" ]]; then
-    echo -e "corepack: \tN/A"
-
-else
-    echo -e "$(type -P corepack) \t$(corepack -v)"
-    # VERCOREPACK=$(corepack -v);
 fi
 
 if
@@ -813,15 +804,6 @@ then
     fi
 elif
     [[ $VERNPM != "$VERNPX" ]]
-then
-    NODENOTCORR=1
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-    fi
-elif
-    [[ $PATHCOREPACK != "/usr/bin/corepack" ]]
 then
     NODENOTCORR=1
     if [[ "$SKRPTLANG" = "--de" ]]; then
@@ -1074,12 +1056,6 @@ else
     VERNPX=$(npx -v)
 fi
 
-if [[ -z "$PATHCOREPACK" ]]; then
-    echo -e "corepack: \tN/A"
-
-else
-    echo -e "$(type -P corepack) \t$(corepack -v)"
-fi
 if [[ "$SKRPTLANG" = "--de" ]]; then
     echo -e "\nEmpfohlene Versionen sind zurzeit nodejs ""$NODERECOM"" und npm ""$NPMRECOM"""
 else
@@ -1125,16 +1101,7 @@ then
         echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
         echo "Wrong installation path detected. This needs to be fixed."
     fi
-elif
-    [[ $PATHCOREPACK != "/usr/bin/corepack" ]]
-then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-        echo "Falsche Installationspfade erkannt. Dies muss korrigiert werden."
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-        echo "Wrong installation path detected. This needs to be fixed."
-    fi
+
 elif
     [[ $VERNODEJS != "$VERNODE" ]]
 then

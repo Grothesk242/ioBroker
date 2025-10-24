@@ -3,7 +3,7 @@
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2025-09-22_TEST"
+VERSION="2025-10-24"
 NODE_MAJOR=22 #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This the target when no other option is set.
 
 # Check if version option is a valid one
@@ -185,18 +185,10 @@ echo -e "$(type -p node) \t\t$(node -v)"
 echo -e "$(type -p npm) \t\t$(npm -v)"
 echo -e "$(type -p npx) \t\t$(npx -v)"
 
-if [[ -f /usr/bin/corepack ]]; then
-    echo -e "$(type -p corepack) \t$(corepack -v)"
-fi
-
 PATHNODEJS=$(type -p nodejs)
 PATHNODE=$(type -p node)
 PATHNPM=$(type -p npm)
 PATHNPX=$(type -p npx)
-
-if [[ -f /usr/bin/corepack ]]; then
-    PATHCOREPACK=$(type -p corepack)
-fi
 
 if [[ -f /usr/bin/nodejs ]]; then
     VERNODEJS=$(nodejs -v)
@@ -233,11 +225,6 @@ then
     echo -e "$NOTCORRSTRG"
 elif
     [[ "$VERNPM" != "$VERNPX" ]]
-then
-    NODENOTCORR=1
-    echo -e "$NOTCORRSTRG"
-elif
-    [[ -f /usr/bin/corepack && "$PATHCOREPACK" != "/usr/bin/corepack" ]]
 then
     NODENOTCORR=1
     echo -e "$NOTCORRSTRG"
@@ -283,12 +270,6 @@ then
         then
             echo -e "*** Deleting $PATHNPX ***"
             $SUDOX rm "$(type -p npx)"
-        fi
-        if
-            [[ -f /usr/bin/corepack && "$PATHCOREPACK" != "/usr/bin/corepack" ]]
-        then
-            echo -e "*** Deleting $PATHCOREPACK ***"
-            $SUDOX rm "$(type -p corepack)"
         fi
         echo -e "\nWrong paths have been fixed. Run 'iob diag' or 'iob nodejs-update' again to check if your installation is fine now"
     fi
