@@ -1,5 +1,8 @@
 # Changelog for Linux-Diag-Script
 
+## 2025-10-24
+* Removed check for corepack
+
 ## 2025-08-09
 * Added nodejs vulnerability check
 * Removed references to static release names 
