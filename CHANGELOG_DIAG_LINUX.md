@@ -1,7 +1,8 @@
 # Changelog for Linux-Diag-Script
 
-## 2025-10-24
+## 2025-10-26
 * Removed check for corepack
+* Removed generic messages concerning EXT4 file system
 
 ## 2025-08-09
 * Added nodejs vulnerability check
