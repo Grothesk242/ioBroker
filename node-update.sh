@@ -3,7 +3,7 @@
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2025-10-24"
+VERSION="2025-10-29"
 NODE_MAJOR=22 #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This the target when no other option is set.
 
 # Check if version option is a valid one
@@ -309,7 +309,7 @@ if [[ "$VERNODE" != "v$NODERECOM" ]] && [[ "$NODERECOM" == [[:digit:]]*.[[:digit
         # Finding nodesource.gpg or nodesource.key and deleting. Current key is pulled in later.
         $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt -o -path /run \) -prune -false -o -name nodesource.[gk]* -print) 2> /dev/null"
         # Deleting nodesource.list Will be recreated later.
-        $SUDOX rm /etc/apt/sources.list.d/nodesource.lis* 2>/dev/null
+        $SUDOX rm /etc/apt/sources.list.d/nodesource.* 2>/dev/null
     else
         echo "We are not fixing your installation. Exiting."
         if [[ -f "/var/run/reboot-required" ]]; then
@@ -334,7 +334,7 @@ then
         # Finding nodesource.gpg or nodesource.key and deleting. Current key is pulled in later.
         $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt \) -prune -false -o -name nodesource.[gk]* -print)"
         # Deleting nodesource.list Will be recreated later.
-        $SUDOX rm /etc/apt/sources.list.d/nodesource.lis* 2>/dev/null
+        $SUDOX rm /etc/apt/sources.list.d/nodesource.* 2>/dev/null
     else
         echo "Not fixing your installation. Exiting."
 

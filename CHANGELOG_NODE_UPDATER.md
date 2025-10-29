@@ -1,7 +1,8 @@
 # Changelog for Node.js Updater Script
 
-## 2025-10-24
+## 2025-10-29
 * Removed check for corepack
+* Remove any exiting nodesource source files 
 
 ## 2025-08-14
 * Avoid having two pinning files and bumping the pin priority to 1001 
