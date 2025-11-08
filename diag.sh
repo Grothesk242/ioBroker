@@ -167,6 +167,12 @@ else
 fi
 echo -e "Kernel          : $(uname -m)"
 echo -e "Userland        : $(getconf LONG_BIT) bit"
+
+
+if [ "$ARCH" != "amd64" ] && [ "$ARCH" != "arm64" ]; then
+    echo -e "/nUnsupported architecture: $ARCH. Only amd64 and arm64 are supported. You have to reinstall your operating system with full 64Bit support or upgrade to more modern hardware."
+fi
+
 echo ""
 echo "Systemuptime and Load:"
 uptime
@@ -174,10 +180,6 @@ echo "CPU threads: $(grep -c processor /proc/cpuinfo)"
 echo ""
 echo ""
 
-
-if [ "$ARCH" != "amd64" ] && [ "$ARCH" != "arm64" ]; then
-    echo -e "/nUnsupported architecture: $ARCH. Only amd64 and arm64 are supported. You have to reinstall your operating system with full 64Bit support or upgrade to more modern hardware."
-fi
 
 if [[ "$SKRPTLANG" == "--de" ]]; then
     echo -e "\033[34;107m*** LEBENSZYKLUS STATUS ***\033[0m"
@@ -858,7 +860,7 @@ if [[ $NODENOTCORR -eq 0 ]]; then
 fi
 
 if [ "$ARCH" != "amd64" ] && [ "$ARCH" != "arm64" ]; then
-    echo -e "\nUnsupported architecture: $ARCH. Only amd64 and arm64 are supported. You have to reinstall your operating system with full 64Bit support or upgrade to more modern hardware."
+    echo -e "\nUnsupported architecture: $ARCH. Only amd64 and arm64 are supported for current nodejs versions. You have to reinstall your operating system with full 64Bit support or upgrade to more modern hardware."
 fi
 
 echo -e "\n\033[34;107m*** ioBroker-Installation ***\033[0m"
