@@ -600,7 +600,7 @@ check_zigbee_port() {
     [[ -z "$configured_port" ]] && return 0
     
     # Prüfe ob der konfigurierte Port in den by-id Geräten vorkommt
-    if [[ "$SYSZIGBEEPORT" == *"$configured_port"* ]]; then
+    if [[ "$SYSZIGBEEPORT" == "$configured_port" ]]; then
         echo ""
         if [[ "$SKRPTLANG" = "--de" ]]; then
             echo "✓ zigbee.$instance COM-Port stimmt mit 'by-id' überein. Sehr gut!"
