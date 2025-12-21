@@ -673,6 +673,7 @@ done
 
 for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json; do
     if [[ "$MASKED" != "unmasked" ]]; then
+        echo
         echo "Zigbee Network Settings on your coordinator/in nvbackup are:"
         echo ""
         echo "zigbee.X"
@@ -693,6 +694,7 @@ done
 
 for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json; do
     if [[ "$MASKED" = "unmasked" ]]; then
+        echo
         echo -e "\nZigbee Network Settings on your coordinator/in nvbackup are:"
         echo -e "zigbee.$(printf '%s\n' "$d" | cut -c36)"
         echo "Extended Pan ID:"
