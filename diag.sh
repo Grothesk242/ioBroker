@@ -719,13 +719,6 @@ VERNODE=$(node -v)
 VERNPM=$(npm -v)
 VERNPX=$(npx -v)
 
-echo "HIER SOLLEN DIE PFADE UND VERSIONEN ERSCHEINEN!"
-echo -e "$PATHNODEJS \t$VERNODEJS"
-echo -e "$PATHNODE \t$VERNODE"
-echo -e "$PATHNPM \t$VERNPM"
-echo -e "$PATHNPX \t$VERNPX"
-
-
 check_nodejs_installation() {
     local show_messages="${1:-true}"  # Standard: Zeige Meldungen
     
@@ -767,6 +760,12 @@ check_nodejs_installation() {
 echo ""
 echo -e "\033[34;107m*** NodeJS-Installation ***\033[0m"
 echo ""
+echo "HIER SOLLEN DIE PFADE UND VERSIONEN ERSCHEINEN!"
+echo -e "$PATHNODEJS \t$VERNODEJS"
+echo -e "$PATHNODE \t\t$VERNODE"
+echo -e "$PATHNPM \t\t$VERNPM"
+echo -e "$PATHNPX \t\t$VERNPX"
+
 
 check_nodejs_installation
 
