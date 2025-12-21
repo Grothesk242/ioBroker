@@ -612,11 +612,11 @@ check_zigbee_port() {
         if [[ "$SKRPTLANG" = "--de" ]]; then
             echo "⚠ HINWEIS:"
             echo "Dein zigbee.$instance COM-Port stimmt NICHT mit 'by-id' überein."
-            echo "Bitte überprüfe deine Einstellung: $configured_port"
+            echo -e "Bitte überprüfe deine Einstellung: \n$configured_port"
         else
             echo "⚠ HINT:"
             echo "Your zigbee.$instance COM-Port is NOT matching 'by-id'."
-            echo "Please check your setting: $configured_port"
+            echo -e "Please check your setting: \n$configured_port"
         fi
     fi
 }
