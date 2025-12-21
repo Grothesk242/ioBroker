@@ -707,101 +707,52 @@ for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json; do
         grep \"key\" "$d" | cut -c 13-44
     fi
 done
+
+#### NODEJS-CHECK
+
+check_nodejs_installation() {
+    local show_messages="${1:-true}"  # Standard: Zeige Meldungen
+    
+    # Sammle alle Probleme
+    local problems=()
+    
+    [[ "$PATHNODEJS" != "/usr/bin/nodejs" ]] && problems+=("nodejs path")
+    [[ "$PATHNODE" != "/usr/bin/node" ]] && problems+=("node path")
+    [[ "$PATHNPM" != "/usr/bin/npm" ]] && problems+=("npm path")
+    [[ "$PATHNPX" != "/usr/bin/npx" ]] && problems+=("npx path")
+    [[ "$VERNODEJS" != "$VERNODE" ]] && problems+=("nodejs/node version mismatch")
+    [[ "$VERNPM" != "$VERNPX" ]] && problems+=("npm/npx version mismatch")
+    
+    # Wenn Probleme gefunden wurden
+    if [[ ${#problems[@]} -gt 0 ]]; then
+        if [[ "$show_messages" = "true" ]]; then
+            if [[ "$SKRPTLANG" = "--de" ]]; then
+                echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
+                echo "Probleme: ${problems[*]}"
+            else
+                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
+                echo "Issues: ${problems[*]}"
+            fi
+        fi
+        return 1
+    else
+        if [[ "$show_messages" = "true" ]]; then
+            if [[ "$SKRPTLANG" = "--de" ]]; then
+                echo "✓ nodeJS ist korrekt installiert"
+            else
+                echo "✓ nodeJS installation is correct"
+            fi
+        fi
+        return 0
+    fi
+}
+
+
 echo ""
 echo -e "\033[34;107m*** NodeJS-Installation ***\033[0m"
 echo ""
 
-# PATHAPT=$(type -P apt);
-PATHNODEJS=$(type -P nodejs)
-PATHNODE=$(type -P node)
-PATHNPM=$(type -P npm)
-PATHNPX=$(type -P npx)
-
-if [[ -z "$PATHNODEJS" ]]; then
-    echo -e "nodejs: \t\tN/A"
-else
-    echo -e "$(type -P nodejs) \t$(nodejs -v)"
-    VERNODEJS=$(nodejs -v)
-fi
-
-if [[ -z "$PATHNODE" ]]; then
-    echo -e "node: \t\tN/A"
-
-else
-    echo -e "$(type -P node) \t\t$(node -v)"
-    VERNODE=$(node -v)
-fi
-
-if [[ -z "$PATHNPM" ]]; then
-    echo -e "npm: \t\t\tN/A"
-else
-    echo -e "$(type -P npm) \t\t$(npm -v)"
-    VERNPM=$(npm -v)
-fi
-
-if [[ -z "$PATHNPX" ]]; then
-    echo -e "npx: \t\t\tN/A"
-
-else
-    echo -e "$(type -P npx) \t\t$(npx -v)"
-    VERNPX=$(npx -v)
-fi
-
-if
-    [[ $PATHNODEJS != "/usr/bin/nodejs" ]]
-then
-    NODENOTCORR=1
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-    fi
-elif
-    [[ $PATHNODE != "/usr/bin/node" ]]
-then
-    NODENOTCORR=1
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-    fi
-elif
-    [[ $PATHNPM != "/usr/bin/npm" ]]
-then
-    NODENOTCORR=1
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-    fi
-elif
-    [[ $PATHNPX != "/usr/bin/npx" ]]
-then
-    NODENOTCORR=1
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-    fi
-elif
-    [[ $VERNODEJS != "$VERNODE" ]]
-then
-    NODENOTCORR=1
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-    fi
-elif
-    [[ $VERNPM != "$VERNPX" ]]
-then
-    NODENOTCORR=1
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-    fi
-fi
+check_nodejs_installation
 
 echo ""
 if [ -f /usr/bin/apt-cache ]; then
