@@ -580,10 +580,6 @@ echo ""
 echo -e "\033[32mThe five largest files in iobroker-data are:\033[0m"
 find /opt/iobroker/iobroker-data -maxdepth 15 -type f -exec du -sh {} + | sort -rh | head -n 5
 echo ""
-# Detecting dev-links in /dev/serial/by-id
-echo -e "\033[32mUSB-Devices by-id:\033[0m"
-echo "USB-Sticks -  Avoid direct links to /dev/tty* in your adapter setups, please always prefer the links 'by-id':"
-echo ""
 
 # ============================================================================
 # ZigBee Port Checking - Optimierte Version
