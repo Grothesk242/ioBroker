@@ -736,10 +736,10 @@ check_nodejs_installation() {
     if [[ ${#problems[@]} -gt 0 ]]; then
         if [[ "$show_messages" = "true" ]]; then
             if [[ "$SKRPTLANG" = "--de" ]]; then
-                echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
+                echo -e "\033[0;31m*** Node.js ist NICHT korrekt installiert ***\033[0m"
                 echo "Probleme: ${problems[*]}"
             else
-                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
+                echo -e "\033[0;31m*** Node.js is NOT correctly installed ***\033[0m"
                 echo "Issues: ${problems[*]}"
             fi
         fi
@@ -747,9 +747,9 @@ check_nodejs_installation() {
     else
         if [[ "$show_messages" = "true" ]]; then
             if [[ "$SKRPTLANG" = "--de" ]]; then
-                echo "✓ nodeJS ist korrekt installiert"
+                echo "✓ Node.js ist korrekt installiert"
             else
-                echo "✓ nodeJS installation is correct"
+                echo "✓ Node.js installation is correct"
             fi
         fi
         return 0
@@ -760,12 +760,11 @@ check_nodejs_installation() {
 echo ""
 echo -e "\033[34;107m*** NodeJS-Installation ***\033[0m"
 echo ""
-echo "HIER SOLLEN DIE PFADE UND VERSIONEN ERSCHEINEN!"
 echo -e "$PATHNODEJS \t$VERNODEJS"
 echo -e "$PATHNODE \t\t$VERNODE"
 echo -e "$PATHNPM \t\t$VERNPM"
 echo -e "$PATHNPX \t\t$VERNPX"
-
+echo ""
 
 check_nodejs_installation
 
@@ -982,34 +981,12 @@ if [[ -f "/var/run/reboot-required" ]]; then
     fi
 fi
 echo -e "\nNodejs-Installation:"
-if [[ -z "$PATHNODEJS" ]]; then
-    echo -e "nodejs: \t\tN/A"
+if check_nodejs_installation false; then
+    # Alles OK
+    :
 else
-    echo -e "$(type -P nodejs) \t$(nodejs -v)"
-    VERNODEJS=$(nodejs -v)
-fi
-
-if [[ -z "$PATHNODE" ]]; then
-    echo -e "node: \t\t\tN/A"
-
-else
-    echo -e "$(type -P node) \t\t$(node -v)"
-    VERNODE=$(node -v)
-fi
-
-if [[ -z "$PATHNPM" ]]; then
-    echo -e "npm: \t\t\tN/A"
-else
-    echo -e "$(type -P npm) \t\t$(npm -v)"
-    VERNPM=$(npm -v)
-fi
-
-if [[ -z "$PATHNPX" ]]; then
-    echo -e "npx: \t\t\tN/A"
-
-else
-    echo -e "$(type -P npx) \t\t$(npx -v)"
-    VERNPX=$(npx -v)
+    # Zeige Fix-Hinweis
+    echo "Bitte 'iob nodejs-update' ausführen"
 fi
 
 if [[ "$SKRPTLANG" = "--de" ]]; then
