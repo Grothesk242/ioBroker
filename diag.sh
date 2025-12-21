@@ -714,6 +714,16 @@ PATHNODEJS=$(type -P nodejs)
 PATHNODE=$(type -P node)
 PATHNPM=$(type -P npm)
 PATHNPX=$(type -P npx)
+VERNODEJS=$(nodejs -v)
+VERNODE=$(node -v)
+VERNPM=$(npm -v)
+VERNPX=$(npx -v)
+
+echo -e "$PATHNODEJS \t$VERNODEJS"
+echo -e "$PATHNODE \t$VERNODE"
+echo -e "$PATHNPM \t$VERNPM"
+echo -e "$PATHNPX \t$VERNPX"
+
 
 check_nodejs_installation() {
     local show_messages="${1:-true}"  # Standard: Zeige Meldungen
