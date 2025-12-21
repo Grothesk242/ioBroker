@@ -719,6 +719,7 @@ VERNODE=$(node -v)
 VERNPM=$(npm -v)
 VERNPX=$(npx -v)
 
+echo "HIER SOLLEN DIE PFADE UND VERSIONEN ERSCHEINEN!"
 echo -e "$PATHNODEJS \t$VERNODEJS"
 echo -e "$PATHNODE \t$VERNODE"
 echo -e "$PATHNPM \t$VERNPM"
