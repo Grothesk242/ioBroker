@@ -738,9 +738,11 @@ check_nodejs_installation() {
             if [[ "$SKRPTLANG" = "--de" ]]; then
                 echo -e "\033[0;31m*** Node.js ist NICHT korrekt installiert ***\033[0m"
                 echo "Probleme: ${problems[*]}"
+                echo "Führe 'iobroker nodejs-update' im Terminal aus."
             else
                 echo -e "\033[0;31m*** Node.js is NOT correctly installed ***\033[0m"
                 echo "Issues: ${problems[*]}"
+                echo "Execute 'iob nodejs-update' in your terminal."
             fi
         fi
         return 1
