@@ -710,6 +710,11 @@ done
 
 #### NODEJS-CHECK
 
+PATHNODEJS=$(type -P nodejs)
+PATHNODE=$(type -P node)
+PATHNPM=$(type -P npm)
+PATHNPX=$(type -P npx)
+
 check_nodejs_installation() {
     local show_messages="${1:-true}"  # Standard: Zeige Meldungen
     
