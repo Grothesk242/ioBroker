@@ -585,102 +585,92 @@ echo -e "\033[32mUSB-Devices by-id:\033[0m"
 echo "USB-Sticks -  Avoid direct links to /dev/tty* in your adapter setups, please always prefer the links 'by-id':"
 echo ""
 
-SYSZIGBEEPORT=$(find /dev/serial/by-id/ -maxdepth 1 -mindepth 1 2>/dev/null)
+# ============================================================================
+# ZigBee Port Checking - Optimierte Version
+# ============================================================================
 
-# echo "CODE I ";
-#
-#
-# if [[ -n "$SYSZIGBEEPORT" ]];
-#         then
-#                 echo "$SYSZIGBEEPORT";
-#         else
-#                 echo "No Devices found 'by-id'";
-# fi
-#
-# readarray IOBZIGBEEPORT < <( iob list instances | grep system.adapter.zigbee | awk -F ':' '{print $4}' );
-# for i in  ${IOBZIGBEEPORT[@]}; do
-#         if [[ "$SYSZIGBEEPORT" == *"$i"* ]]
-#                 then
-#                 echo "";
-#                 echo "Your zigbee COM-Port is matching 'by-id'. Very good!"
-#                 else
-#                 echo;
-#                 echo "HINT:";
-#                 echo "Your zigbee COM-Port is NOT matching 'by-id'. Please check your setting:";
-#                 echo "$IOBZIGBEEPORT0";
-#         fi
-#                 done;
-#
-# echo "";
-# echo "CODE II";
-IOBZIGBEEPORT0=$(echo "$IOBLISTINST" | grep system.adapter.zigbee.0 | awk -F ':' '{print $4}' | cut -c 2-)
-IOBZIGBEEPORT1=$(echo "$IOBLISTINST" | grep system.adapter.zigbee.1 | awk -F ':' '{print $4}' | cut -c 2-)
-IOBZIGBEEPORT2=$(echo "$IOBLISTINST" | grep system.adapter.zigbee.2 | awk -F ':' '{print $4}' | cut -c 2-)
-IOBZIGBEEPORT3=$(echo "$IOBLISTINST" | grep system.adapter.zigbee.3 | awk -F ':' '{print $4}' | cut -c 2-)
+# Funktion für ZigBee Port Check
+check_zigbee_port() {
+    local instance=$1
+    local configured_port
+    
+    # Hole konfigurierten Port für diese Instanz
+    configured_port=$(echo "$IOBLISTINST" | \
+                      grep "system.adapter.zigbee.$instance" | \
+                      awk -F ':' '{print $4}' | \
+                      cut -c 2-)
+    
+    # Wenn kein Port konfiguriert, überspringe diese Instanz
+    [[ -z "$configured_port" ]] && return 0
+    
+    # Prüfe ob der konfigurierte Port in den by-id Geräten vorkommt
+    if [[ "$SYSZIGBEEPORT" == *"$configured_port"* ]]; then
+        echo ""
+        if [[ "$SKRPTLANG" = "--de" ]]; then
+            echo "✓ zigbee.$instance COM-Port stimmt mit 'by-id' überein. Sehr gut!"
+        else
+            echo "✓ Your zigbee.$instance COM-Port is matching 'by-id'. Very good!"
+        fi
+    else
+        echo ""
+        if [[ "$SKRPTLANG" = "--de" ]]; then
+            echo "⚠ HINWEIS:"
+            echo "Dein zigbee.$instance COM-Port stimmt NICHT mit 'by-id' überein."
+            echo "Bitte überprüfe deine Einstellung: $configured_port"
+        else
+            echo "⚠ HINT:"
+            echo "Your zigbee.$instance COM-Port is NOT matching 'by-id'."
+            echo "Please check your setting: $configured_port"
+        fi
+    fi
+}
+
+# USB-Geräte by-id
+echo -e "\033[32mUSB-Devices by-id:\033[0m"
+if [[ "$SKRPTLANG" = "--de" ]]; then
+    echo "USB-Sticks - Vermeide direkte Links zu /dev/tty* in deinen Adapter-Einstellungen,"
+    echo "bevorzuge immer die Links 'by-id':"
+else
+    echo "USB-Sticks - Avoid direct links to /dev/tty* in your adapter setups,"
+    echo "please always prefer the links 'by-id':"
+fi
+echo ""
+
+# Finde alle USB-Geräte by-id
+SYSZIGBEEPORT=$(find /dev/serial/by-id/ -maxdepth 1 -mindepth 1 2>/dev/null)
 
 if [[ -n "$SYSZIGBEEPORT" ]]; then
     echo "$SYSZIGBEEPORT"
 else
-    echo "No Devices found 'by-id'"
+    if [[ "$SKRPTLANG" = "--de" ]]; then
+        echo "Keine Geräte gefunden 'by-id'"
+    else
+        echo "No Devices found 'by-id'"
+    fi
 fi
 
 echo ""
 
+# Prüfe ob überhaupt ZigBee-Daten existieren
 for d in /opt/iobroker/iobroker-data/zigbee_*; do
     if [ -d "$d" ]; then
         echo -e "\033[34;107m*** ZigBee Settings ***\033[0m"
+        break
     fi
-    break
 done
 
-if [[ -n "$IOBZIGBEEPORT0" ]]; then
-    if [ "$SYSZIGBEEPORT" = "$IOBZIGBEEPORT0" ]; then
-        echo ""
-        echo "Your zigbee.0 COM-Port is matching 'by-id'. Very good!"
-    else
-        echo
-        echo "HINT:"
-        echo "Your zigbee.0 COM-Port is NOT matching 'by-id'. Please check your setting:"
-        echo "$IOBZIGBEEPORT0"
-        # diff -y --left-column <(echo "$IOBZIGBEEPORT0") <(echo "$SYSZIGBEEPORT");
-    fi
-fi
-if [[ -n "$IOBZIGBEEPORT1" ]]; then
-    if [ "$SYSZIGBEEPORT" = "$IOBZIGBEEPORT1" ]; then
-        echo ""
-        echo "Your zigBee.1 COM-Port is matching 'by-id'. Very good!"
-    else
-        echo
-        echo "HINT:"
-        echo "Your zigbee.1 COM-Port is NOT matching 'by-id'. Please check your setting:"
-        echo "$IOBZIGBEEPORT1"
-        # diff -y --left-column <(echo "$IOBZIGBEEPORT1") <(echo "$SYSZIGBEEPORT");
-    fi
-fi
-if [[ -n "$IOBZIGBEEPORT2" ]]; then
-    if [ "$SYSZIGBEEPORT" = "$IOBZIGBEEPORT2" ]; then
-        echo ""
-        echo "Your zigBee.2 COM-Port is matching 'by-id'. Very good!"
-    else
-        echo
-        echo "HINT:"
-        echo "Your zigbee.2 COM-Port is NOT matching 'by-id'. Please check your setting:"
-        echo "$IOBZIGBEEPORT2"
-        # diff -y --left-column <(echo "$IOBZIGBEEPORT2") <(echo "$SYSZIGBEEPORT");
-    fi
-fi
-if [[ -n "$IOBZIGBEEPORT3" ]]; then
-    if [ "$SYSZIGBEEPORT" = "$IOBZIGBEEPORT3" ]; then
-        echo ""
-        echo "Your zigbee.3 COM-Port is matching 'by-id'. Very good!"
-    else
-        echo
-        echo "HINT:"
-        echo "Your zigbee.3 COM-Port is NOT matching 'by-id'. Please check your setting:"
-        echo "$IOBZIGBEEPORT3"
-        # diff -y --left-column <(echo "$IOBZIGBEEPORT0") <(echo "$SYSZIGBEEPORT");
-    fi
-fi
+# Prüfe alle ZigBee-Instanzen automatisch (0-9)
+# Die Funktion überspringt automatisch nicht-existente Instanzen
+for i in {0..9}; do
+    check_zigbee_port "$i"
+done
+
+# ============================================================================
+# Ende des optimierten ZigBee-Blocks
+# ============================================================================
+
+
+
 # masked output
 
 for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json; do
