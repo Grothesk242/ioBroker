@@ -982,103 +982,35 @@ if [[ -f "/var/run/reboot-required" ]]; then
         echo ""
     fi
 fi
-echo -e "\nNodejs-Installation:"
-if check_nodejs_installation false; then
-    # Alles OK
-    :
-else
-    # Zeige Fix-Hinweis
-    echo "Bitte 'iob nodejs-update' ausführen"
-fi
-
-if [[ "$SKRPTLANG" = "--de" ]]; then
-    echo -e "\nEmpfohlene Versionen sind zurzeit nodejs ""$NODERECOM"" und npm ""$NPMRECOM"""
-else
-    echo -e "\nRecommended versions are nodejs ""$NODERECOM"" and npm ""$NPMRECOM"""
-fi
-if
-    [[ $PATHNODEJS != "/usr/bin/nodejs" ]]
-then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-        echo "Falsche Installationspfade erkannt. Dies muss korrigiert werden."
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-        echo "Wrong installation path detected. This needs to be fixed."
-    fi
-elif
-    [[ $PATHNODE != "/usr/bin/node" ]]
-then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-        echo "Falsche Installationspfade erkannt. Dies muss korrigiert werden."
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-        echo "Wrong installation path detected. This needs to be fixed."
-    fi
-elif
-    [[ $PATHNPM != "/usr/bin/npm" ]]
-then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-        echo "Falsche Installationspfade erkannt. Dies muss korrigiert werden."
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-        echo "Wrong installation path detected. This needs to be fixed."
-    fi
-elif
-    [[ $PATHNPX != "/usr/bin/npx" ]]
-then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-        echo "Falsche Installationspfade erkannt. Dies muss korrigiert werden."
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-        echo "Wrong installation path detected. This needs to be fixed."
-    fi
-
-elif
-    [[ $VERNODEJS != "$VERNODE" ]]
-then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-        echo "Die Versionen von nodejs und node stimmen nicht überein. Dies muss korrigiert werden."
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-        echo "nodejs and node versions do not match. This needs to be fixed."
-    fi
-
-elif
-    [[ $VERNPM != "$VERNPX" ]]
-then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-        echo "Die Versionen von npm und npx stimmen nicht überein. Dies muss korrigiert werden."
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-        echo "npm and npx versions do not match. This needs to be fixed."
-    fi
-else
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo "nodeJS ist korrekt installiert"
-    else
-        echo "nodeJS installation is correct"
-    fi
-fi
-if [[ $NODENOTCORR -eq 1 ]]; then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo ""
-        echo "Bitte den Befehl"
-        echo -e "\e[031miob nodejs-update\e[0m"
-        echo "zur Korrektur der Installation ausführen."
-    else
-        echo ""
-        echo "Please execute"
-        echo -e "\e[031miob nodejs-update\e[0m"
-        echo "to fix these errors."
-    fi
-fi
 echo ""
+
+ echo -e "\nNodejs-Installation:" 
+ echo -e "$PATHNODEJS \t$VERNODEJS" 
+ echo -e "$PATHNODE \t\t$VERNODE" 
+ echo -e "$PATHNPM \t\t$VERNPM" 
+ echo -e "$PATHNPX \t\t$VERNPX" 
+ if [[ "$SKRPTLANG" = "--de" ]]; then 
+ echo -e "\nEmpfohlene Versionen sind zurzeit nodejs $NODERECOM und npm $NPMRECOM" 
+ else echo -e "\nRecommended versions are nodejs $NODERECOM and npm $NPMRECOM" 
+ fi 
+ # Nutze die bereits existierende Funktion 
+ if ! check_nodejs_installation false; then 
+ # Wenn Fehler gefunden wurden, zeige Fix-Hinweis 
+ if [[ "$SKRPTLANG" = "--de" ]]; then 
+ echo "" 
+ echo "⚠ Node.js ist nicht korrekt installiert!" 
+ echo "Bitte den Befehl 'iob nodejs-update' zur Korrektur ausführen." else 
+ echo "" echo "⚠ Node.js is NOT correctly installed!" 
+ echo "Please execute 'iob nodejs-update' to fix these errors." 
+ fi 
+ else 
+ # Alles OK 
+ if [[ "$SKRPTLANG" = "--de" ]]; then 
+ echo "✓ Node.js ist korrekt installiert" else 
+ echo "✓ Node.js installation is correct" 
+ fi 
+ fi
+
 # echo -e "Total Memory: \t\t`free -h | awk '/^Mem:/{print $2}'`";
 echo "MEMORY: "
 free -ht --mega
