@@ -45,7 +45,7 @@ fi
 
 # VARIABLES
 export LC_ALL=C
-SKRIPTV="2025-10-24" #version of this script
+SKRIPTV="2025-12-25" #version of this script
 #NODE_MAJOR=22           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT=""
 if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi
@@ -341,7 +341,7 @@ if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
     CURRENT_HEX=${THROTTLED_CODE_HEX:4:1}
     CURRENT_BIN=${HEX_BIN_MAP[$CURRENT_HEX]}
     if [ "$CURRENT_HEX" == "0" ] || [ -z "$CURRENT_HEX" ]; then
-        echo "No throttling issues detected."
+        echo -e "\e[32mNo throttling issues detected.\e[0m"
     else
         bit_n=0
         for ((i = ${#CURRENT_BIN} - 1; i >= 0; i--)); do
@@ -359,7 +359,7 @@ if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
     PAST_HEX=${THROTTLED_CODE_HEX:0:1}
     PAST_BIN=${HEX_BIN_MAP[$PAST_HEX]}
     if [ "$PAST_HEX" = "0" ]; then
-        echo "No throttling issues detected."
+        echo -e "\e[32mNo throttling issues detected.\e[0m"
     else
         bit_n=16
         for ((i = ${#PAST_BIN} - 1; i >= 0; i--)); do
@@ -374,13 +374,13 @@ fi
 if [[ "$SKRPTLANG" = "--de" ]]; then
     if [[ -f "/var/run/reboot-required" ]]; then
         echo ""
-        echo "Dieses System benötigt einen NEUSTART"
+        echo -e "\e[31mDieses System benötigt einen NEUSTART\e[0m"
         echo ""
     fi
 else
     if [[ -f "/var/run/reboot-required" ]]; then
         echo ""
-        echo "This system needs to be REBOOTED!"
+        echo -e "\e[31mThis system needs to be REBOOTED!\e[0m"
         echo ""
     fi
 fi
@@ -536,15 +536,15 @@ echo -e "\033[34;107m*** DMESG CRITICAL ERRORS ***\033[0m"
 CRITERROR=$(sudo dmesg --level=emerg,alert,crit -T | wc -l)
 if [[ "$CRITERROR" -gt 0 ]]; then
     if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "Es wurden $CRITERROR KRITISCHE FEHLER gefunden. \nSiehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
+        echo -e "\e[31mEs wurden $CRITERROR KRITISCHE FEHLER gefunden.\e[0m \nSiehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
     else
-        echo -e "$CRITERROR CRITICAL ERRORS DETECTED! \nCheck 'sudo dmesg --level=emerg,alert,crit -T' for details"
+        echo -e "\e[31m$CRITERROR CRITICAL ERRORS DETECTED!\e[0m \nCheck 'sudo dmesg --level=emerg,alert,crit -T' for details"
     fi
 else
     if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo "Es wurden keine kritischen Fehler gefunden"
-    else
-        echo "No critical errors detected"
+        echo -e "\e[30mEs wurden keine kritischen Fehler gefunden\e[0m"
+        else
+        echo -e "\e[30mNo critical errors detected\e[0m"
     fi
 fi
 echo ""
@@ -603,21 +603,21 @@ check_zigbee_port() {
     if [[ "$SYSZIGBEEPORT" == "$configured_port" ]]; then
         echo ""
         if [[ "$SKRPTLANG" = "--de" ]]; then
-            echo "✓ zigbee.$instance COM-Port stimmt mit 'by-id' überein. Sehr gut!"
+            echo -e "\e[32m✓ zigbee.$instance COM-Port stimmt mit 'by-id' überein. Sehr gut!\e[0m"
         else
-            echo "✓ Your zigbee.$instance COM-Port is matching 'by-id'. Very good!"
+            echo -e "\e[32m✓ Your zigbee.$instance COM-Port is matching 'by-id'. Very good!\e[0m"
         fi
     else
         echo ""
         if [[ "$SKRPTLANG" = "--de" ]]; then
-            echo "⚠ HINWEIS:"
-            echo "Dein zigbee.$instance COM-Port stimmt NICHT mit 'by-id' überein."
-            echo -e "Bitte überprüfe die Einstellung:"
+            echo -e "\e[1;33m⚠ HINWEIS:"
+            echo -e "Dein zigbee.$instance COM-Port stimmt NICHT mit 'by-id' überein.\e[0m"
+            echo "Bitte überprüfe die Einstellung:"
             echo $configured_port
         else
-            echo "⚠ HINT:"
-            echo "Your zigbee.$instance COM-Port is NOT matching 'by-id'."
-            echo -e "Please check your setting:"
+            echo -e "\e[1;33m⚠ HINT:"
+            echo -e "Your zigbee.$instance COM-Port is NOT matching 'by-id'.\e[0m"
+            echo "Please check your setting:"
             echo $configured_port
         fi
     fi
@@ -725,12 +725,12 @@ check_nodejs_installation() {
     # Sammle alle Probleme
     local problems=()
     
-    [[ "$PATHNODEJS" != "/usr/bin/nodejs" ]] && problems+=("nodejs path")
-    [[ "$PATHNODE" != "/usr/bin/node" ]] && problems+=("node path")
-    [[ "$PATHNPM" != "/usr/bin/npm" ]] && problems+=("npm path")
-    [[ "$PATHNPX" != "/usr/bin/npx" ]] && problems+=("npx path")
-    [[ "$VERNODEJS" != "$VERNODE" ]] && problems+=("nodejs/node version mismatch")
-    [[ "$VERNPM" != "$VERNPX" ]] && problems+=("npm/npx version mismatch")
+    [[ "$PATHNODEJS" != "/usr/bin/nodejs" ]] && problems+=(" nodejs path ")
+    [[ "$PATHNODE" != "/usr/bin/node" ]] && problems+=(" node path ")
+    [[ "$PATHNPM" != "/usr/bin/npm" ]] && problems+=(" npm path ")
+    [[ "$PATHNPX" != "/usr/bin/npx" ]] && problems+=(" npx path ")
+    [[ "$VERNODEJS" != "$VERNODE" ]] && problems+=(" nodejs/node version mismatch ")
+    [[ "$VERNPM" != "$VERNPX" ]] && problems+=(" npm/npx version mismatch ")
     
     # Wenn Probleme gefunden wurden
     if [[ ${#problems[@]} -gt 0 ]]; then
@@ -749,9 +749,9 @@ check_nodejs_installation() {
     else
         if [[ "$show_messages" = "true" ]]; then
             if [[ "$SKRPTLANG" = "--de" ]]; then
-                echo "✓ Node.js ist korrekt installiert"
+                echo -e "\e[32m✓ Node.js ist korrekt installiert\e[0m"
             else
-                echo "✓ Node.js installation is correct"
+                echo -e "\e[32m✓ Node.js installation is correct\e[0m"
             fi
         fi
         return 0
@@ -849,10 +849,19 @@ echo -e "\033[34;107m*** OS-Repositories and Updates ***\033[0m"
 if [ -f /usr/bin/apt-get ]; then
     sudo apt-get update 1>/dev/null && sudo apt-get update
     APT=$(apt-get upgrade -s | grep -P '^\d+ upgraded' | cut -d" " -f1)
+
     if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "Offene Systemupdates: $APT"
+        if [[ $APT -eq 0 ]]; then
+            echo -e "\e[32mOffene Systemupdates: $APT\e[0m"
+        else
+            echo -e "\e[31mOffene Systemupdates: $APT\e[0m"
+        fi
     else
-        echo -e "Pending Updates: $APT"
+        if [[ $APT -eq 0 ]]; then
+            echo -e "\e[32mPending systemupdates: $APT\e[0m"
+        else
+            echo -e "\e[31mPending systemupdates: $APT\e[0m"
+        fi
     fi
 else
     if [[ "$SKRPTLANG" = "--de" ]]; then
