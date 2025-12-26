@@ -173,6 +173,7 @@ echo "CPU threads: $(grep -c processor /proc/cpuinfo)"
 echo ""
 echo ""
 
+
 if [[ "$SKRPTLANG" == "--de" ]]; then
     echo -e "\033[34;107m*** LEBENSZYKLUS STATUS ***\033[0m"
 
@@ -543,7 +544,7 @@ if [[ "$CRITERROR" -gt 0 ]]; then
 else
     if [[ "$SKRPTLANG" = "--de" ]]; then
         echo -e "\e[30mEs wurden keine kritischen Fehler gefunden\e[0m"
-        else
+    else
         echo -e "\e[30mNo critical errors detected\e[0m"
     fi
 fi
@@ -589,16 +590,16 @@ echo ""
 check_zigbee_port() {
     local instance=$1
     local configured_port
-    
+
     # Hole konfigurierten Port für diese Instanz
-    configured_port=$(echo "$IOBLISTINST" | \
-                      grep "system.adapter.zigbee.$instance" | \
-                      awk -F ':' '{print $4}' | \
-                      cut -c 2-)
-    
+    configured_port=$(echo "$IOBLISTINST" |
+        grep "system.adapter.zigbee.$instance" |
+        awk -F ':' '{print $4}' |
+        cut -c 2-)
+
     # Wenn kein Port konfiguriert, überspringe diese Instanz
     [[ -z "$configured_port" ]] && return 0
-    
+
     # Prüfe ob der konfigurierte Port in den by-id Geräten vorkommt
     if [[ "$SYSZIGBEEPORT" == "$configured_port" ]]; then
         echo ""
@@ -667,8 +668,6 @@ done
 # Ende des optimierten ZigBee-Blocks
 # ============================================================================
 
-
-
 # masked output
 
 for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json; do
@@ -719,19 +718,23 @@ VERNODE=$(node -v)
 VERNPM=$(npm -v)
 VERNPX=$(npx -v)
 
+#DEBUG
+VERNODE="20.1.1"
+#DEBUG_END
+
 check_nodejs_installation() {
-    local show_messages="${1:-true}"  # Standard: Zeige Meldungen
-    
+    local show_messages="${1:-true}" # Standard: Zeige Meldungen
+
     # Sammle alle Probleme
     local problems=()
-    
+
     [[ "$PATHNODEJS" != "/usr/bin/nodejs" ]] && problems+=(" nodejs path ")
     [[ "$PATHNODE" != "/usr/bin/node" ]] && problems+=(" node path ")
     [[ "$PATHNPM" != "/usr/bin/npm" ]] && problems+=(" npm path ")
     [[ "$PATHNPX" != "/usr/bin/npx" ]] && problems+=(" npx path ")
     [[ "$VERNODEJS" != "$VERNODE" ]] && problems+=(" nodejs/node version mismatch ")
     [[ "$VERNPM" != "$VERNPX" ]] && problems+=(" npm/npx version mismatch ")
-    
+
     # Wenn Probleme gefunden wurden
     if [[ ${#problems[@]} -gt 0 ]]; then
         if [[ "$show_messages" = "true" ]]; then
@@ -757,7 +760,6 @@ check_nodejs_installation() {
         return 0
     fi
 }
-
 
 echo ""
 echo -e "\033[34;107m*** NodeJS-Installation ***\033[0m"
@@ -993,35 +995,37 @@ if [[ -f "/var/run/reboot-required" ]]; then
 fi
 echo ""
 
- echo -e "\nNodejs-Installation:" 
- echo -e "$PATHNODEJS \t$VERNODEJS" 
- echo -e "$PATHNODE \t\t$VERNODE" 
- echo -e "$PATHNPM \t\t$VERNPM" 
- echo -e "$PATHNPX \t\t$VERNPX" 
- if [[ "$SKRPTLANG" = "--de" ]]; then 
- echo -e "\nEmpfohlene Versionen sind zurzeit nodejs $NODERECOM und npm $NPMRECOM" 
- else echo -e "\nRecommended versions are nodejs $NODERECOM and npm $NPMRECOM" 
- fi 
- # Nutze die bereits existierende Funktion 
- if ! check_nodejs_installation false; then 
- # Wenn Fehler gefunden wurden, zeige Fix-Hinweis 
- if [[ "$SKRPTLANG" = "--de" ]]; then 
- echo "" 
- echo "⚠ Node.js ist nicht korrekt installiert!" 
- echo "Bitte den Befehl 'iob nodejs-update' zur Korrektur ausführen." else 
- echo "" echo "⚠ Node.js is NOT correctly installed!" 
- echo "Please execute 'iob nodejs-update' to fix these errors." 
- fi 
- else 
- # Alles OK 
- if [[ "$SKRPTLANG" = "--de" ]]; then 
- echo "✓ Node.js ist korrekt installiert" else 
- echo "✓ Node.js installation is correct" 
- fi 
- fi
+echo -e "\nNodejs-Installation:"
+echo -e "$PATHNODEJS \t$VERNODEJS"
+echo -e "$PATHNODE \t\t$VERNODE"
+echo -e "$PATHNPM \t\t$VERNPM"
+echo -e "$PATHNPX \t\t$VERNPX"
+if [[ "$SKRPTLANG" = "--de" ]]; then
+    echo -e "\nEmpfohlene Versionen sind zurzeit nodejs $NODERECOM und npm $NPMRECOM"
+else
+    echo -e "\nRecommended versions are nodejs $NODERECOM and npm $NPMRECOM"
+fi
+# Nutze die bereits existierende Funktion
+if check_nodejs_installation false; then
+    # Wenn Fehler gefunden wurden, zeige Fix-Hinweis
+    if [[ "$SKRPTLANG" = "--de" ]]; then
+        echo ""
+        echo "⚠ Node.js ist nicht korrekt installiert!"
+        echo "Bitte den Befehl 'iob nodejs-update' zur Korrektur ausführen."
+        else
+        echo "" echo "⚠ Node.js is NOT correctly installed!"
+        echo "Please execute 'iob nodejs-update' to fix these errors."
+    fi
+else
+    # Alles OK
+    if [[ "$SKRPTLANG" = "--de" ]]; then
+        echo "✓ Node.js ist korrekt installiert" else
+        echo "✓ Node.js installation is correct"
+    fi
+fi
 
 # echo -e "Total Memory: \t\t`free -h | awk '/^Mem:/{print $2}'`";
-echo "MEMORY: "
+echo -e "\nMEMORY: "
 free -ht --mega
 echo ""
 echo -e "Active iob-Instances: \t$(echo "$IOBLISTINST" | grep -c ^+)"
