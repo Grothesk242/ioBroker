@@ -21,7 +21,7 @@ if [ "$(id -u)" -eq 0 ] && [ ! -f "$DOCKER" ]; then
 fi
 clear
 if [[ "$*" = *--de* ]]; then SKRPTLANG="--de"; fi
-if [[ "$SKRPTLANG" = "--de" ]]; then
+if [[ "$SKRPTLANG" == "--de" ]]; then
     echo "*** iob diag startet, bitte etwas warten ***"
 else
     echo "*** iob diag is starting up, please wait ***"
@@ -45,7 +45,7 @@ fi
 
 # VARIABLES
 export LC_ALL=C
-SKRIPTV="2025-12-25" #version of this script
+SKRIPTV="2025-12-26" #version of this script
 #NODE_MAJOR=22           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT=""
 if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi
@@ -372,7 +372,7 @@ if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
     fi
 fi
 
-if [[ "$SKRPTLANG" = "--de" ]]; then
+if [[ "$SKRPTLANG" == "--de" ]]; then
     if [[ -f "/var/run/reboot-required" ]]; then
         echo ""
         echo -e "\e[31mDieses System benötigt einen NEUSTART\e[0m"
@@ -388,7 +388,7 @@ fi
 
 echo ""
 
-if [[ "$SKRPTLANG" = "--de" ]]; then
+if [[ "$SKRPTLANG" == "--de" ]]; then
     echo -e "\033[34;107m*** ZEIT UND ZEITZONEN ***\033[0m"
 
     if [ -f "$DOCKER" ]; then
@@ -424,7 +424,7 @@ else
 fi
 
 echo ""
-if [[ "$SKRPTLANG" = "--de" ]]; then
+if [[ "$SKRPTLANG" == "--de" ]]; then
     echo -e "\033[34;107m*** User und Gruppen ***\033[0m"
     echo "User der 'iob diag' aufgerufen hat:"
     whoami
@@ -433,7 +433,7 @@ if [[ "$SKRPTLANG" = "--de" ]]; then
     echo ""
     echo "User der den 'js-controller' ausführt:"
     if [[ $(pidof iobroker.js-controller) -gt 0 ]]; then
-        IOUSER=$(ps -o user= -p "$(pidof iobroker.js-controller)")
+        IOUSER=$(ps -o user= -p "$(pgrep -f iobroker.js-controller | head -1)")
         echo "$IOUSER"
         sudo -H -u "$IOUSER" env | grep HOME
         echo "GROUPS=$(sudo -u "$IOUSER" groups)"
@@ -496,7 +496,7 @@ fi
 
 if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
     if [[ $(systemctl get-default) == "graphical.target" ]]; then
-        if [[ "$SKRPTLANG" = "--de" ]]; then
+        if [[ "$SKRPTLANG" == "--de" ]]; then
             echo -e "\nDas System bootet in eine graphische Oberfläche. Im Serverbetrieb wird keine GUI verwendet. Bitte das BootTarget auf 'multi-user.target' setzen oder 'iobroker fix' ausführen."
         else
             echo -e "\nSystem is booting into 'graphical.target'. Usually a server is running in 'multi-user.target'. Please set BootTarget to 'multi-user.target' or run 'iobroker fix'"
@@ -536,13 +536,13 @@ echo ""
 echo -e "\033[34;107m*** DMESG CRITICAL ERRORS ***\033[0m"
 CRITERROR=$(sudo dmesg --level=emerg,alert,crit -T | wc -l)
 if [[ "$CRITERROR" -gt 0 ]]; then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
         echo -e "\e[31mEs wurden $CRITERROR KRITISCHE FEHLER gefunden.\e[0m \nSiehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
     else
         echo -e "\e[31m$CRITERROR CRITICAL ERRORS DETECTED!\e[0m \nCheck 'sudo dmesg --level=emerg,alert,crit -T' for details"
     fi
 else
-    if [[ "$SKRPTLANG" = "--de" ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
         echo -e "\e[30mEs wurden keine kritischen Fehler gefunden\e[0m"
     else
         echo -e "\e[30mNo critical errors detected\e[0m"
@@ -603,30 +603,30 @@ check_zigbee_port() {
     # Prüfe ob der konfigurierte Port in den by-id Geräten vorkommt
     if [[ "$SYSZIGBEEPORT" == "$configured_port" ]]; then
         echo ""
-        if [[ "$SKRPTLANG" = "--de" ]]; then
+        if [[ "$SKRPTLANG" == "--de" ]]; then
             echo -e "\e[32m✓ zigbee.$instance COM-Port stimmt mit 'by-id' überein. Sehr gut!\e[0m"
         else
             echo -e "\e[32m✓ Your zigbee.$instance COM-Port is matching 'by-id'. Very good!\e[0m"
         fi
     else
         echo ""
-        if [[ "$SKRPTLANG" = "--de" ]]; then
+        if [[ "$SKRPTLANG" == "--de" ]]; then
             echo -e "\e[1;33m⚠ HINWEIS:"
             echo -e "Dein zigbee.$instance COM-Port stimmt NICHT mit 'by-id' überein.\e[0m"
             echo "Bitte überprüfe die Einstellung:"
-            echo $configured_port
+            echo -e "\'$configured_port\'"
         else
             echo -e "\e[1;33m⚠ HINT:"
             echo -e "Your zigbee.$instance COM-Port is NOT matching 'by-id'.\e[0m"
             echo "Please check your setting:"
-            echo $configured_port
+            echo -e "\'$configured_port\'"
         fi
     fi
 }
 
 # USB-Geräte by-id
 echo -e "\033[32mUSB-Devices by-id:\033[0m"
-if [[ "$SKRPTLANG" = "--de" ]]; then
+if [[ "$SKRPTLANG" == "--de" ]]; then
     echo "USB-Sticks - Vermeide direkte Links zu /dev/tty* in deinen Adapter-Einstellungen,"
     echo "bevorzuge immer die Links 'by-id':"
 else
@@ -641,7 +641,7 @@ SYSZIGBEEPORT=$(find /dev/serial/by-id/ -maxdepth 1 -mindepth 1 2>/dev/null)
 if [[ -n "$SYSZIGBEEPORT" ]]; then
     echo "$SYSZIGBEEPORT"
 else
-    if [[ "$SKRPTLANG" = "--de" ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
         echo "Keine Geräte gefunden 'by-id'"
     else
         echo "No Devices found 'by-id'"
@@ -718,9 +718,6 @@ VERNODE=$(node -v)
 VERNPM=$(npm -v)
 VERNPX=$(npx -v)
 
-#DEBUG
-VERNODE="20.1.1"
-#DEBUG_END
 
 check_nodejs_installation() {
     local show_messages="${1:-true}" # Standard: Zeige Meldungen
@@ -737,8 +734,8 @@ check_nodejs_installation() {
 
     # Wenn Probleme gefunden wurden
     if [[ ${#problems[@]} -gt 0 ]]; then
-        if [[ "$show_messages" = "true" ]]; then
-            if [[ "$SKRPTLANG" = "--de" ]]; then
+        if [[ "$show_messages" == "true" ]]; then
+            if [[ "$SKRPTLANG" == "--de" ]]; then
                 echo -e "\033[0;31m*** Node.js ist NICHT korrekt installiert ***\033[0m"
                 echo "Probleme: ${problems[*]}"
                 echo "Führe 'iobroker nodejs-update' im Terminal aus."
@@ -750,8 +747,8 @@ check_nodejs_installation() {
         fi
         return 1
     else
-        if [[ "$show_messages" = "true" ]]; then
-            if [[ "$SKRPTLANG" = "--de" ]]; then
+        if [[ "$show_messages" == "true" ]]; then
+            if [[ "$SKRPTLANG" == "--de" ]]; then
                 echo -e "\e[32m✓ Node.js ist korrekt installiert\e[0m"
             else
                 echo -e "\e[32m✓ Node.js installation is correct\e[0m"
@@ -852,7 +849,7 @@ if [ -f /usr/bin/apt-get ]; then
     sudo apt-get update 1>/dev/null && sudo apt-get update
     APT=$(apt-get upgrade -s | grep -P '^\d+ upgraded' | cut -d" " -f1)
 
-    if [[ "$SKRPTLANG" = "--de" ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
         if [[ $APT -eq 0 ]]; then
             echo -e "\e[32mOffene Systemupdates: $APT\e[0m"
         else
@@ -866,7 +863,7 @@ if [ -f /usr/bin/apt-get ]; then
         fi
     fi
 else
-    if [[ "$SKRPTLANG" = "--de" ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
         echo "Es wurde kein auf Debian basierendes System erkannt"
     else
         echo "No Debian-based Linux detected."
@@ -887,7 +884,7 @@ tail -n 25 /opt/iobroker/log/iobroker.current.log
 echo ""
 echo "\`\`\`"
 echo ""
-if [[ "$SKRPTLANG" = "--de" ]]; then
+if [[ "$SKRPTLANG" == "--de" ]]; then
     echo -e "\033[33m============ Langfassung bis hier markieren =============\033[0m"
     echo ""
     echo "iob diag hat das System inspiziert."
@@ -913,7 +910,7 @@ else
     echo ""
 fi
 clear
-if [[ "$SKRPTLANG" = "--de" ]]; then
+if [[ "$SKRPTLANG" == "--de" ]]; then
     echo "Zusammfassung ab hier markieren und kopieren:"
     echo ""
     echo "\`\`\`bash"
@@ -977,7 +974,7 @@ else
 fi
 
 echo ""
-if [[ "$SKRPTLANG" = "--de" ]]; then
+if [[ "$SKRPTLANG" == "--de" ]]; then
     echo -e "Offene OS-Updates: \t$APT"
     echo -e "Offene iob updates: \t$(iob update -u $ALLOWROOT | grep -c 'Updatable\|Updateable')"
 else
@@ -985,7 +982,7 @@ else
     echo -e "Pending iob updates: \t$(iob update -u $ALLOWROOT | grep -c 'Updatable\|Updateable')"
 fi
 if [[ -f "/var/run/reboot-required" ]]; then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
         echo -e "\nDas System muss JETZT neugestartet werden!"
         echo ""
     else
@@ -1000,27 +997,29 @@ echo -e "$PATHNODEJS \t$VERNODEJS"
 echo -e "$PATHNODE \t\t$VERNODE"
 echo -e "$PATHNPM \t\t$VERNPM"
 echo -e "$PATHNPX \t\t$VERNPX"
-if [[ "$SKRPTLANG" = "--de" ]]; then
+if [[ "$SKRPTLANG" == "--de" ]]; then
     echo -e "\nEmpfohlene Versionen sind zurzeit nodejs $NODERECOM und npm $NPMRECOM"
 else
     echo -e "\nRecommended versions are nodejs $NODERECOM and npm $NPMRECOM"
 fi
 # Nutze die bereits existierende Funktion
 if check_nodejs_installation false; then
-    # Wenn Fehler gefunden wurden, zeige Fix-Hinweis
-    if [[ "$SKRPTLANG" = "--de" ]]; then
+    # Return 0 = Alles OK
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        echo "✓ Node.js ist korrekt installiert"
+    else
+        echo "✓ Node.js installation is correct"
+    fi
+else
+    # Return 1 = Fehler gefunden
+    if [[ "$SKRPTLANG" == "--de" ]]; then
         echo ""
         echo "⚠ Node.js ist nicht korrekt installiert!"
         echo "Bitte den Befehl 'iob nodejs-update' zur Korrektur ausführen."
-        else
-        echo "" echo "⚠ Node.js is NOT correctly installed!"
+    else
+        echo ""
+        echo "⚠ Node.js is NOT correctly installed!"
         echo "Please execute 'iob nodejs-update' to fix these errors."
-    fi
-else
-    # Alles OK
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo "✓ Node.js ist korrekt installiert" else
-        echo "✓ Node.js installation is correct"
     fi
 fi
 
@@ -1050,7 +1049,7 @@ find /opt/iobroker/iobroker-data -maxdepth 1 -type f -name \*states\* -exec du -
 echo ""
 echo ""
 if [[ $ANZNPMTMP -gt 0 ]]; then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
         echo "**********************************************************************"
         echo -e "Probleme wurden erkannt, bitte \e[031miob fix\e[0m ausführen"
         echo "**********************************************************************"
@@ -1063,7 +1062,7 @@ if [[ $ANZNPMTMP -gt 0 ]]; then
     fi
 fi
 if [[ "$CRITERROR" -gt 0 ]]; then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
         echo -e "Es wurden $CRITERROR KRITISCHE FEHLER gefunden. \nSiehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
     else
         echo -e "$CRITERROR CRITICAL ERRORS DETECTED! \nCheck 'sudo dmesg --level=emerg,alert,crit -T' for details"
@@ -1071,7 +1070,7 @@ if [[ "$CRITERROR" -gt 0 ]]; then
 fi
 echo -e "$RELEASESTATUS"
 echo ""
-if [[ "$SKRPTLANG" = "--de" ]]; then
+if [[ "$SKRPTLANG" == "--de" ]]; then
     echo "=================== ENDE DER ZUSAMMENFASSUNG ===================="
     echo -e "\`\`\`"
     echo ""
