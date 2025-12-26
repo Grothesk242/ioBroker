@@ -432,7 +432,7 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
     echo "GROUPS=$(groups)"
     echo ""
     echo "User der den 'js-controller' ausführt:"
-    if [[ $(pidof iobroker.js-controller) -gt 0 ]]; then
+    if [[ $(pgrep -f iobroker.js-controller) -gt 0 ]]; then
         IOUSER=$(ps -o user= -p "$(pgrep -f iobroker.js-controller | head -1)")
         echo "$IOUSER"
         sudo -H -u "$IOUSER" env | grep HOME
@@ -458,8 +458,8 @@ else
     echo "GROUPS=$(groups)"
     echo ""
     echo "User that is running 'js-controller':"
-    if [[ $(pidof iobroker.js-controller) -gt 0 ]]; then
-        IOUSER=$(ps -o user= -p "$(pidof iobroker.js-controller)")
+    if [[ $(pgrep -f iobroker.js-controller) -gt 0 ]]; then
+        IOUSER=$(ps -o user= -p "$(pgrep -f iobroker.js-controller | head -1)")
         echo "$IOUSER"
         sudo -H -u "$IOUSER" env | grep HOME
         echo "GROUPS=$(sudo -u "$IOUSER" groups)"
