@@ -692,17 +692,18 @@ if ls /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json 1> /dev/null 2>&1; then
 
     for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json; do
         if [[ "$MASKED" = "unmasked" ]]; then
-            echo
-            echo -e "\nZigbee Network Settings on your coordinator/in nvbackup are:"
-            echo -e "zigbee.$(printf '%s\n' "$d" | cut -c36)"
-            echo "Extended Pan ID:"
-            grep extended_pan_id "$d" | cut -c 23-38
-            echo "Pan ID:"
-            printf "%d" 0x"$(grep "pan_id" "$d" | cut -c 14-17)"
-            echo -e "\nChannel:"
-            grep "channel" "$d" | cut -c 14-15
-            echo "Network Key:"
-            grep "key" "$d" | cut -c 13-44
+
+        echo -e "\nZigbee Network Settings on your coordinator/in nvbackup are:"
+        echo -e "zigbee.$(printf '%s\n' "$d" | cut -c36)"
+        echo "Extended Pan ID:"
+        grep extended_pan_id "$d" | cut -c 23-38
+        echo "Pan ID:"
+        printf "%d" 0x"$(grep \"pan_id\" "$d" | cut -c 14-17)"
+        echo -e "\nChannel:"
+        grep \"channel\" "$d" | cut -c 14-15
+        echo "Network Key:"
+        grep \"key\" "$d" | cut -c 13-44
+
         fi
     done
 else
