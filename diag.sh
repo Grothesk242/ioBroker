@@ -45,7 +45,7 @@ fi
 
 # VARIABLES
 export LC_ALL=C
-SKRIPTV="2025-12-26" #version of this script
+SKRIPTV="2025-12-29" #version of this script
 #NODE_MAJOR=22           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT=""
 if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi
@@ -614,12 +614,12 @@ check_zigbee_port() {
             echo -e "\e[1;33m⚠ HINWEIS:"
             echo -e "Dein zigbee.$instance COM-Port stimmt NICHT mit 'by-id' überein.\e[0m"
             echo "Bitte überprüfe die Einstellung:"
-            echo -e "\'$configured_port\'"
+            echo -e "$configured_port"
         else
             echo -e "\e[1;33m⚠ HINT:"
             echo -e "Your zigbee.$instance COM-Port is NOT matching 'by-id'.\e[0m"
             echo "Please check your setting:"
-            echo -e "\'$configured_port\'"
+            echo -e "$configured_port"
         fi
     fi
 }
