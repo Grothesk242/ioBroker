@@ -45,7 +45,7 @@ fi
 
 # VARIABLES
 export LC_ALL=C
-SKRIPTV="2025-12-29" #version of this script
+SKRIPTV="2025-12-30" #version of this script
 #NODE_MAJOR=22           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT=""
 if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi
@@ -172,7 +172,6 @@ uptime
 echo "CPU threads: $(grep -c processor /proc/cpuinfo)"
 echo ""
 echo ""
-
 
 if [[ "$SKRPTLANG" == "--de" ]]; then
     echo -e "\033[34;107m*** LEBENSZYKLUS STATUS ***\033[0m"
@@ -543,9 +542,9 @@ if [[ "$CRITERROR" -gt 0 ]]; then
     fi
 else
     if [[ "$SKRPTLANG" == "--de" ]]; then
-        echo -e "\e[30mEs wurden keine kritischen Fehler gefunden\e[0m"
+        echo -e "\e[32mEs wurden keine kritischen Fehler gefunden\e[0m"
     else
-        echo -e "\e[30mNo critical errors detected\e[0m"
+        echo -e "\e[32mNo critical errors detected\e[0m"
     fi
 fi
 echo ""
@@ -670,7 +669,7 @@ done
 
 # masked output
 
-if ls /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json 1> /dev/null 2>&1; then
+if ls /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json 1>/dev/null 2>&1; then
     for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json; do
         if [[ "$MASKED" != "unmasked" ]]; then
             echo
@@ -693,16 +692,16 @@ if ls /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json 1> /dev/null 2>&1; then
     for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json; do
         if [[ "$MASKED" = "unmasked" ]]; then
 
-        echo -e "\nZigbee Network Settings on your coordinator/in nvbackup are:"
-        echo -e "zigbee.$(printf '%s\n' "$d" | cut -c36)"
-        echo "Extended Pan ID:"
-        grep extended_pan_id "$d" | cut -c 23-38
-        echo "Pan ID:"
-        printf "%d" 0x"$(grep \"pan_id\" "$d" | cut -c 14-17)"
-        echo -e "\nChannel:"
-        grep \"channel\" "$d" | cut -c 14-15
-        echo "Network Key:"
-        grep \"key\" "$d" | cut -c 13-44
+            echo -e "\nZigbee Network Settings on your coordinator/in nvbackup are:"
+            echo -e "zigbee.$(printf '%s\n' "$d" | cut -c36)"
+            echo "Extended Pan ID:"
+            grep extended_pan_id "$d" | cut -c 23-38
+            echo "Pan ID:"
+            printf "%d" 0x"$(grep \"pan_id\" "$d" | cut -c 14-17)"
+            echo -e "\nChannel:"
+            grep \"channel\" "$d" | cut -c 14-15
+            echo "Network Key:"
+            grep \"key\" "$d" | cut -c 13-44
 
         fi
     done
@@ -720,7 +719,6 @@ VERNODEJS=$(nodejs -v)
 VERNODE=$(node -v)
 VERNPM=$(npm -v)
 VERNPX=$(npx -v)
-
 
 check_nodejs_installation() {
     local show_messages="${1:-true}" # Standard: Zeige Meldungen
