@@ -1,0 +1,303 @@
+#!/usr/bin/env bash
+
+# Define colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Clear screen
+clear
+
+# Check if 'nc' (netcat) is available
+if ! command -v nc &>/dev/null; then
+    printf "${RED}Error: 'nc' (netcat) is not installed. Please install it with 'sudo apt-get install netcat-openbsd'.${NC}\n"
+    exit 1
+fi
+
+# Function to display a progress bar
+progress_bar() {
+    local duration=${1}
+    local columns=$(tput cols)
+    local progress_width=$((columns - 10))
+    local increment=$((duration * 100 / progress_width))
+    local progress=0
+
+    printf " ["
+    for ((i = 0; i < progress_width; i++)); do
+        if [ $((i * increment)) -ge $((progress * duration / 100)) ]; then
+            printf "="
+            progress=$((progress + 1))
+        else
+            printf " "
+        fi
+    done
+    printf "] %d%%" $progress
+    printf "\r"
+}
+
+# --- Capabilities ---
+# Installing/updating the nodejs package replaces the node binary, and file
+# capabilities do not survive that. Re-grant what install_necessary_packages
+# in installer_library.sh grants, otherwise adapters that need privileged
+# ports or raw sockets (ping, BLE, ports below 1024) stop working.
+set_node_capabilities() {
+    local node_bin
+    node_bin=$(readlink -f "$(command -v node)" 2>/dev/null || echo "")
+    if [[ -z "$node_bin" ]]; then
+        printf "${RED}Error: Node.js binary not found. Capabilities were not set, please run 'iob fix'.${NC}\n"
+        return 1
+    fi
+
+    # A capability missing from the bounding set (a container started without
+    # --cap-add=NET_ADMIN, for example) must not be granted: the kernel would
+    # then refuse to start node at all. Bits: 10 = cap_net_bind_service,
+    # 12 = cap_net_admin, 13 = cap_net_raw.
+    local capbnd caps=() name bit
+    capbnd=$(awk '/^CapBnd:/ {print $2}' /proc/self/status 2>/dev/null || echo "")
+    for name in cap_net_admin:12 cap_net_bind_service:10 cap_net_raw:13; do
+        bit=${name#*:}
+        if [[ -z "$capbnd" ]] || (((16#$capbnd >> bit) & 1)); then
+            caps+=("${name%%:*}")
+        else
+            printf "${YELLOW}Warning: ${name%%:*} is not available on this system and was not granted to Node.js.${NC}\n"
+        fi
+    done
+    if [[ ${#caps[@]} -eq 0 ]]; then
+        printf "${RED}Error: No capabilities can be granted to Node.js. Adapters that need privileged ports or raw sockets will not work.${NC}\n"
+        return 1
+    fi
+
+    local caps_arg
+    caps_arg="$(
+        IFS=,
+        echo "${caps[*]}"
+    )+eip"
+    printf "${YELLOW}Granting $caps_arg to $node_bin...${NC}\n"
+    if ! sudo setcap "$caps_arg" "$node_bin"; then
+        printf "${RED}Error: Failed to set the capabilities. Adapters that need privileged ports or raw sockets will not work until you run 'iob fix'.${NC}\n"
+        return 1
+    fi
+    printf "${GREEN}Done.${NC}\n"
+    echo ""
+    return 0
+}
+
+# Function to stop ioBroker with timeout and progress bar
+stop_iobroker() {
+    printf "${YELLOW}Stopping ioBroker...${NC}\n"
+    iobroker stop &
+    local pid=$!
+    local timeout=60
+    local elapsed=0
+    local progress=0
+
+    # Show progress bar while waiting
+    while kill -0 $pid 2>/dev/null && [ $elapsed -lt $timeout ]; do
+        progress=$((elapsed * 100 / timeout))
+        printf "["
+        for ((i = 0; i < 20; i++)); do
+            if [ $i -lt $((progress / 5)) ]; then
+                printf "="
+            else
+                printf " "
+            fi
+        done
+        printf "] %d%%" $progress
+        printf "\r"
+        sleep 1
+        elapsed=$((elapsed + 1))
+    done
+
+    if [ $elapsed -ge $timeout ]; then
+        # Finish the partially filled bar line before printing the error
+        printf "\n"
+        printf "${RED}Timeout: ioBroker did not stop within $timeout seconds.${NC}\n"
+        kill -9 $pid 2>/dev/null
+        return 1
+    fi
+
+    # Success: fill the bar completely as the last action
+    printf "["
+    for ((i = 0; i < 20; i++)); do
+        printf "="
+    done
+    printf "] 100%%"
+    printf "\n"
+
+    # Verify that js-controller is really stopped
+    if ! wait_for_js_controller_stop; then
+        return 1
+    fi
+    return 0
+}
+
+# Function to wait until js-controller is fully stopped
+wait_for_js_controller_stop() {
+    printf "${YELLOW}Waiting until js-controller is fully stopped..."
+    local timeout=120
+    local elapsed=0
+
+    while pgrep -f "iobroker.js-controller" >/dev/null; do
+        if [ $elapsed -ge $timeout ]; then
+            printf "\n${RED}Timeout: js-controller did not stop within $timeout seconds.${NC}\n"
+            return 1
+        fi
+        printf "."
+        sleep 1
+        elapsed=$((elapsed + 1))
+    done
+    printf "\n${GREEN}Done.${NC}\n"
+    echo ""
+    return 0
+}
+
+# Function to wait until js-controller is fully started
+wait_for_js_controller_start() {
+    printf "${YELLOW}Waiting until js-controller is fully started..."
+    local timeout=120
+    local elapsed=0
+
+    while ! pgrep -f "iobroker.js-controller" >/dev/null; do
+        if [ $elapsed -ge $timeout ]; then
+            printf "\n${RED}Timeout: js-controller did not start within $timeout seconds.${NC}\n"
+            return 1
+        fi
+        printf "."
+        sleep 1
+        elapsed=$((elapsed + 1))
+    done
+
+    # Wait until js-controller is reachable on port 8081
+    elapsed=0
+    local nc_result
+    while true; do
+        if nc_result=$(nc -z localhost 8081 2>&1); then
+            break
+        fi
+        if [ $elapsed -ge $timeout ]; then
+            printf "\n${RED}Timeout: js-controller did not become reachable within $timeout seconds.${NC}\n"
+            return 1
+        fi
+        printf "."
+        sleep 1
+        elapsed=$((elapsed + 1))
+    done
+
+    # Print the captured netcat message on its own line
+    printf "\n"
+    echo "$nc_result"
+    printf "\n${GREEN}Done.${NC}\n"
+    echo ""
+    return 0
+}
+
+# Header
+printf "${BLUE}=============================================================================${NC}\n"
+printf "${BLUE}===                         System Update Script                        ===${NC}\n"
+printf "${BLUE}=============================================================================${NC}\n"
+echo ""
+
+# 1. Update package lists
+printf "${YELLOW}1. Updating package lists...${NC}\n"
+if ! sudo apt-get update -y; then
+    printf "${RED}Error: Failed to update package lists.${NC}\n"
+    exit 1
+fi
+printf "${GREEN}Done.${NC}\n"
+echo ""
+
+# Check if nodejs needs to be updated
+nodejs_update=false
+if sudo apt-get --dry-run upgrade | grep -qE "^Inst nodejs "; then
+    nodejs_update=true
+fi
+
+# If nodejs needs to be updated, stop ioBroker
+if [ "$nodejs_update" = true ]; then
+    if ! stop_iobroker; then
+        printf "${RED}Error: Failed to stop ioBroker properly.${NC}\n"
+        exit 1
+    fi
+fi
+
+# 2. Perform system upgrade
+printf "${YELLOW}2. Performing system upgrade...${NC}\n"
+if ! sudo apt-get full-upgrade -y; then
+    printf "${RED}Error: System upgrade failed.${NC}\n"
+    exit 1
+fi
+printf "${GREEN}Done.${NC}\n"
+echo ""
+
+# If nodejs was updated, re-grant the capabilities to the new node binary
+# (setcap must happen BEFORE ioBroker starts again) and start ioBroker
+if [ "$nodejs_update" = true ]; then
+    printf "${YELLOW}nodejs has been updated. Restoring Node.js capabilities...${NC}\n"
+    if ! set_node_capabilities; then
+        printf "${YELLOW}Warning: Capabilities could not be set. ioBroker will still be started, but adapters that need privileged ports or raw sockets will not work until you run 'iob fix'.${NC}\n"
+    fi
+
+    printf "${YELLOW}Starting ioBroker...${NC}\n"
+    if ! iobroker start; then
+        printf "${RED}Error: Failed to start ioBroker.${NC}\n"
+        exit 1
+    fi
+    if ! wait_for_js_controller_start; then
+        printf "${RED}Error: ioBroker did not start properly.${NC}\n"
+        exit 1
+    fi
+fi
+
+# 3. Check and install ioBroker updates
+printf "${YELLOW}3. Checking for ioBroker updates...${NC}\n"
+iobroker update >"/tmp/iobroker_updates.log" 2>&1
+
+# Check if js-controller needs to be updated
+if grep -q "js-controller.*Updatable" "/tmp/iobroker_updates.log"; then
+    printf "${YELLOW}js-controller needs to be updated. Stopping ioBroker...${NC}\n"
+    if ! stop_iobroker; then
+        printf "${RED}Error: Failed to stop ioBroker properly.${NC}\n"
+        exit 1
+    fi
+
+    printf "${YELLOW}Updating js-controller...${NC}\n"
+    if ! iobroker upgrade self; then
+        printf "${RED}Error: Failed to update js-controller.${NC}\n"
+        exit 1
+    fi
+    printf "${GREEN}Done.${NC}\n"
+    echo ""
+
+    printf "${YELLOW}Starting ioBroker...${NC}\n"
+    if ! iobroker start; then
+        printf "${RED}Error: Failed to start ioBroker.${NC}\n"
+        exit 1
+    fi
+    if ! wait_for_js_controller_start; then
+        printf "${RED}Error: ioBroker did not start properly.${NC}\n"
+        exit 1
+    fi
+fi
+
+# Install all other ioBroker updates
+printf "${YELLOW}Installing ioBroker updates...${NC}\n"
+if ! iobroker upgrade --all; then
+    printf "${RED}Error: Failed to install ioBroker updates.${NC}\n"
+    exit 1
+fi
+printf "${GREEN}Done.${NC}\n"
+echo ""
+
+# Reboot check
+printf "${BLUE}=============================================================================${NC}\n"
+if [ -f "/var/run/reboot-required" ]; then
+    printf "${RED}IMPORTANT: The system needs to be REBOOTED to complete the changes!${NC}\n"
+    echo ""
+    printf "${YELLOW}Please execute the following command:${NC}\n"
+    printf "${GREEN}sudo reboot${NC}\n"
+else
+    printf "${GREEN}All updates have been installed successfully. No reboot required.${NC}\n"
+fi
+printf "${BLUE}=============================================================================${NC}\n"
