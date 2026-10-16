@@ -12,6 +12,7 @@ STOP_TIMEOUT=300
 START_TIMEOUT=120
 APT_COMMAND="upgrade"
 IS_CONTAINER=false
+nodejs_update=false
 
 # Prevent parallel execution
 LOCK_FILE="/var/lock/full_updater.lock"
@@ -168,7 +169,7 @@ if [[ "$IS_CONTAINER" == false ]]; then
         nodejs_update=true
     fi
 
-    if [[ "$nodejs_update" == true ]]; then
+    if [[ "$nodejs_update" == true && "$IS_CONTAINER" == false ]]; then
         if ! stop_iobroker; then
             printf "${RED}Error: Failed to stop ioBroker properly.${NC}\n"
             exit 1
@@ -198,43 +199,7 @@ if sudo apt-get --dry-run "$APT_COMMAND" | grep -qE "^Inst nodejs "; then
     nodejs_update=true
 fi
 
-# If nodejs needs to be updated, stop ioBroker
-if [ "$nodejs_update" = true ]; then
-    if ! stop_iobroker; then
-        printf "${RED}Error: Failed to stop ioBroker properly.${NC}\n"
-        exit 1
-    fi
-fi
-
-# 2. Perform system upgrade
-printf "${YELLOW}2. Performing system upgrade...${NC}\n"
-if ! sudo apt-get "$APT_COMMAND" -y; then
-    printf "${RED}Error: System upgrade failed.${NC}\n"
-    exit 1
-fi
-printf "${GREEN}Done.${NC}\n"
-echo ""
-
-# If nodejs was updated, re-grant the capabilities to the new node binary
-# (setcap must happen BEFORE ioBroker starts again) and start ioBroker
-if [ "$nodejs_update" = true ]; then
-    printf "${YELLOW}nodejs has been updated. Restoring Node.js capabilities...${NC}\n"
-    if ! set_node_capabilities; then
-        printf "${YELLOW}Warning: Capabilities could not be set. ioBroker will still be started, but adapters that need privileged ports or raw sockets will not work until you run 'iob fix'.${NC}\n"
-    fi
-
-    printf "${YELLOW}Starting ioBroker...${NC}\n"
-    if ! iobroker start; then
-        printf "${RED}Error: Failed to start ioBroker.${NC}\n"
-        exit 1
-    fi
-    if ! wait_for_js_controller_start; then
-        printf "${RED}Error: ioBroker did not start properly.${NC}\n"
-        exit 1
-    fi
-fi
-
-# 3. Check and install ioBroker updates
+# 2. Check and install ioBroker updates
 printf "${YELLOW}3. Checking for ioBroker updates...${NC}\n"
 UPDATE_LOG=$(mktemp -t full_updater.XXXXXX.log)
 iobroker update >"$UPDATE_LOG" 2>&1
@@ -284,7 +249,7 @@ if [ -f "/var/run/reboot-required" ]; then
     printf "${GREEN}sudo reboot${NC}\n"
 else
     printf "${GREEN}All updates have been installed successfully. No reboot required.${NC}\n"
-    if [[ "$nodejs_update" == true ]]; then
+    if [[ "$nodejs_update" == true && "$IS_CONTAINER" == false ]]; then
         printf "${YELLOW}Please review ioBroker logs carefully after a Node.js update. Native modules may require rebuilding.${NC}\n"
     fi
 fi
