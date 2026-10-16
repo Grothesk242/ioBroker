@@ -11,6 +11,7 @@ NC='\033[0m' # No Color
 STOP_TIMEOUT=300
 START_TIMEOUT=120
 APT_COMMAND="upgrade"
+IS_CONTAINER=false
 
 # Prevent parallel execution
 LOCK_FILE="/var/lock/full_updater.lock"
@@ -22,10 +23,12 @@ if ! flock -n 200; then
     exit 1
 fi
 
-# Docker containers should not perform OS upgrades
+# Detect container environments
 if [ -f "/.dockerenv" ] || systemd-detect-virt -q --container 2>/dev/null; then
-    printf "${RED}Error: Docker/container environment detected. OS updates are not supported.${NC}\n"
-    exit 1
+    IS_CONTAINER=true
+
+    printf "${YELLOW}Container environment detected.${NC}\n"
+    printf "${YELLOW}OS package updates will be skipped.${NC}\n\n"
 fi
 
 # Cleanup temporary files
@@ -146,13 +149,48 @@ printf "${BLUE}=================================================================
 echo ""
 
 # 1. Update package lists
-printf "${YELLOW}1. Updating package lists...${NC}\n"
-if ! sudo apt-get update -y; then
-    printf "${RED}Error: Failed to update package lists.${NC}\n"
-    exit 1
+if [[ "$IS_CONTAINER" == false ]]; then
+
+    printf "${YELLOW}1. Updating package lists...${NC}\n"
+
+    if ! sudo apt-get update -y; then
+        printf "${RED}Error: Failed to update package lists.${NC}\n"
+        exit 1
+    fi
+
+    printf "${GREEN}Done.${NC}\n"
+    echo ""
+
+    # Check if nodejs needs to be updated
+    nodejs_update=false
+
+    if sudo apt-get --dry-run "$APT_COMMAND" | grep -qE "^Inst nodejs "; then
+        nodejs_update=true
+    fi
+
+    if [[ "$nodejs_update" == true ]]; then
+        if ! stop_iobroker; then
+            printf "${RED}Error: Failed to stop ioBroker properly.${NC}\n"
+            exit 1
+        fi
+    fi
+
+    printf "${YELLOW}2. Performing system upgrade...${NC}\n"
+
+    if ! sudo apt-get "$APT_COMMAND" -y; then
+        printf "${RED}Error: System upgrade failed.${NC}\n"
+        exit 1
+    fi
+
+    printf "${GREEN}Done.${NC}\n"
+    echo ""
+
+else
+
+    printf "${YELLOW}Skipping OS package updates because a container environment was detected.${NC}\n\n"
+    nodejs_update=false
+
 fi
-printf "${GREEN}Done.${NC}\n"
-echo ""
 
 # Check if nodejs needs to be updated
 nodejs_update=false
