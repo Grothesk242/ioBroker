@@ -38,12 +38,6 @@ trap cleanup EXIT INT TERM
 # Clear screen
 clear
 
-# Check if 'nc' (netcat) is available
-if ! command -v nc &>/dev/null; then
-    printf "${RED}Error: 'nc' (netcat) is not installed. Please install it with 'sudo apt-get install netcat-openbsd'.${NC}\n"
-    exit 1
-fi
-
 # --- Capabilities ---
 # Installing/updating the nodejs package replaces the node binary, and file
 # capabilities do not survive that. Re-grant what install_necessary_packages
@@ -92,15 +86,6 @@ set_node_capabilities() {
 }
 
 # Function to stop ioBroker with timeout and progress bar
-stop_iobroker() {
-    printf "${YELLOW}Stopping ioBroker...${NC}\n"
-    iobroker stop &
-    local pid=$!
-    local timeout=60
-    local elapsed=0
-    local progress=0
-
-    # Show progress bar while waiting
 stop_iobroker() {
     printf "${YELLOW}Stopping ioBroker...${NC}\n"
 
@@ -261,6 +246,8 @@ if [ -f "/var/run/reboot-required" ]; then
     printf "${GREEN}sudo reboot${NC}\n"
 else
     printf "${GREEN}All updates have been installed successfully. No reboot required.${NC}\n"
-    printf "${YELLOW}Please review ioBroker logs carefully after a Node.js update. Native modules may require rebuilding.${NC}\n\n"
+    if [[ "$nodejs_update" == true ]]; then
+        printf "${YELLOW}Please review ioBroker logs carefully after a Node.js update. Native modules may require rebuilding.${NC}\n"
+    fi
 fi
 printf "${BLUE}=============================================================================${NC}\n"
