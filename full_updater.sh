@@ -7,6 +7,11 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Configuration
+STOP_TIMEOUT=300
+START_TIMEOUT=120
+APT_COMMAND="upgrade"
+
 # Prevent parallel execution
 LOCK_FILE="/var/lock/full_updater.lock"
 
@@ -14,6 +19,12 @@ exec 200>"$LOCK_FILE"
 
 if ! flock -n 200; then
     printf "${RED}Error: Another instance of full_updater is already running.${NC}\n"
+    exit 1
+fi
+
+# Docker containers should not perform OS upgrades
+if [ -f "/.dockerenv" ] || systemd-detect-virt -q --container 2>/dev/null; then
+    printf "${RED}Error: Docker/container environment detected. OS updates are not supported.${NC}\n"
     exit 1
 fi
 
@@ -32,27 +43,6 @@ if ! command -v nc &>/dev/null; then
     printf "${RED}Error: 'nc' (netcat) is not installed. Please install it with 'sudo apt-get install netcat-openbsd'.${NC}\n"
     exit 1
 fi
-
-# Function to display a progress bar
-progress_bar() {
-    local duration=${1}
-    local columns=$(tput cols)
-    local progress_width=$((columns - 10))
-    local increment=$((duration * 100 / progress_width))
-    local progress=0
-
-    printf " ["
-    for ((i = 0; i < progress_width; i++)); do
-        if [ $((i * increment)) -ge $((progress * duration / 100)) ]; then
-            printf "="
-            progress=$((progress + 1))
-        else
-            printf " "
-        fi
-    done
-    printf "] %d%%" "$progress"
-    printf "\r"
-}
 
 # --- Capabilities ---
 # Installing/updating the nodejs package replaces the node binary, and file
@@ -111,102 +101,56 @@ stop_iobroker() {
     local progress=0
 
     # Show progress bar while waiting
-    while kill -0 "$pid" 2>/dev/null && [ "$elapsed" -lt "$timeout" ]; do
-        progress=$((elapsed * 100 / timeout))
-        printf "["
-        for ((i = 0; i < 20; i++)); do
-            if [ $i -lt $((progress / 5)) ]; then
-                printf "="
-            else
-                printf " "
-            fi
-        done
-        printf "] %d%%" $progress
-        printf "\r"
-        sleep 1
-        elapsed=$((elapsed + 1))
-    done
+stop_iobroker() {
+    printf "${YELLOW}Stopping ioBroker...${NC}\n"
 
-    if [ $elapsed -ge "$timeout" ]; then
-        # Finish the partially filled bar line before printing the error
-        printf "\n"
-        printf "${RED}Timeout: ioBroker did not stop within $timeout seconds.${NC}\n"
-        kill -9 "$pid" 2>/dev/null
+    if ! iobroker stop; then
+        printf "${RED}Error: iobroker stop returned an error.${NC}\n"
         return 1
     fi
 
-    # Success: fill the bar completely as the last action
-    printf "["
-    for ((i = 0; i < 20; i++)); do
-        printf "="
-    done
-    printf "] 100%%"
-    printf "\n"
-
-    # Verify that js-controller is really stopped
-    if ! wait_for_js_controller_stop; then
-        return 1
-    fi
-    return 0
+    wait_for_js_controller_stop
 }
 
 # Function to wait until js-controller is fully stopped
 wait_for_js_controller_stop() {
-    printf "${YELLOW}Waiting until js-controller is fully stopped..."
-    local timeout=120
+    printf "${YELLOW}Waiting until js-controller is fully stopped...${NC}"
+
     local elapsed=0
 
     while pgrep -f "iobroker.js-controller" >/dev/null; do
-        if [ $elapsed -ge "$timeout" ]; then
-            printf "\n${RED}Timeout: js-controller did not stop within $timeout seconds.${NC}\n"
+        if [ "$elapsed" -ge "$STOP_TIMEOUT" ]; then
+            printf "\n${RED}Timeout: js-controller did not stop within ${STOP_TIMEOUT} seconds.${NC}\n"
             return 1
         fi
+
         printf "."
         sleep 1
         elapsed=$((elapsed + 1))
     done
-    printf "\n${GREEN}Done.${NC}\n"
-    echo ""
+
+    printf "\n${GREEN}Done.${NC}\n\n"
     return 0
 }
 
 # Function to wait until js-controller is fully started
 wait_for_js_controller_start() {
-    printf "${YELLOW}Waiting until js-controller is fully started..."
-    local timeout=120
+    printf "${YELLOW}Waiting until js-controller is fully started...${NC}"
+
     local elapsed=0
 
     while ! pgrep -f "iobroker.js-controller" >/dev/null; do
-        if [ $elapsed -ge "$timeout" ]; then
-            printf "\n${RED}Timeout: js-controller did not start within $timeout seconds.${NC}\n"
+        if [ "$elapsed" -ge "$START_TIMEOUT" ]; then
+            printf "\n${RED}Timeout: js-controller did not start within ${START_TIMEOUT} seconds.${NC}\n"
             return 1
         fi
+
         printf "."
         sleep 1
         elapsed=$((elapsed + 1))
     done
 
-    # Wait until js-controller is reachable on port 8081
-    elapsed=0
-    local nc_result
-    while true; do
-        if nc_result=$(nc -z localhost 8081 2>&1); then
-            break
-        fi
-        if [ $elapsed -ge "$timeout" ]; then
-            printf "\n${RED}Timeout: js-controller did not become reachable within $timeout seconds.${NC}\n"
-            return 1
-        fi
-        printf "."
-        sleep 1
-        elapsed=$((elapsed + 1))
-    done
-
-    # Print the captured netcat message on its own line
-    printf "\n"
-    echo "$nc_result"
-    printf "\n${GREEN}Done.${NC}\n"
-    echo ""
+    printf "\n${GREEN}Done.${NC}\n\n"
     return 0
 }
 
@@ -227,7 +171,7 @@ echo ""
 
 # Check if nodejs needs to be updated
 nodejs_update=false
-if sudo apt-get --dry-run upgrade | grep -qE "^Inst nodejs "; then
+if sudo apt-get --dry-run "$APT_COMMAND" | grep -qE "^Inst nodejs "; then
     nodejs_update=true
 fi
 
@@ -241,7 +185,7 @@ fi
 
 # 2. Perform system upgrade
 printf "${YELLOW}2. Performing system upgrade...${NC}\n"
-if ! sudo apt-get upgrade -y; then
+if ! sudo apt-get "$APT_COMMAND" -y; then
     printf "${RED}Error: System upgrade failed.${NC}\n"
     exit 1
 fi
@@ -269,7 +213,7 @@ fi
 
 # 3. Check and install ioBroker updates
 printf "${YELLOW}3. Checking for ioBroker updates...${NC}\n"
-UPDATE_LOG=$(mktemp /tmp/full_updater.XXXXXX.log)
+UPDATE_LOG=$(mktemp -t full_updater.XXXXXX.log)
 iobroker update >"$UPDATE_LOG" 2>&1
 
 # Check if js-controller needs to be updated
@@ -317,5 +261,6 @@ if [ -f "/var/run/reboot-required" ]; then
     printf "${GREEN}sudo reboot${NC}\n"
 else
     printf "${GREEN}All updates have been installed successfully. No reboot required.${NC}\n"
+    printf "${YELLOW}Please review ioBroker logs carefully after a Node.js update. Native modules may require rebuilding.${NC}\n\n"
 fi
 printf "${BLUE}=============================================================================${NC}\n"
