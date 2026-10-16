@@ -16,7 +16,7 @@ IS_CONTAINER=false
 nodejs_update=false
 
 # Prevent parallel execution
-LOCK_FILE="/var/lock/full_updater.lock"
+LOCK_FILE="/tmp/full_updater.lock"
 
 exec 200>"$LOCK_FILE"
 
@@ -168,13 +168,13 @@ if [[ "$IS_CONTAINER" == false ]]; then
         nodejs_update=true
     fi
 
-# Stop ioBroker before upgrading nodejs
-if [[ "$nodejs_update" == true ]]; then
-    if ! stop_iobroker; then
-        printf "${RED}Error: Failed to stop ioBroker properly.${NC}\n"
-        exit 1
+    # Stop ioBroker before upgrading nodejs
+    if [[ "$nodejs_update" == true ]]; then
+        if ! stop_iobroker; then
+            printf "${RED}Error: Failed to stop ioBroker properly.${NC}\n"
+            exit 1
+        fi
     fi
-fi
 
     printf "${YELLOW}2. Performing system upgrade...${NC}\n"
 
