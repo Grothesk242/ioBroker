@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -o pipefail
+set -euo pipefail
 
 # Define colors
 RED='\033[0;31m'
@@ -162,6 +162,19 @@ if [[ "$IS_CONTAINER" == false ]]; then
 
     printf "${GREEN}Done.${NC}\n"
     echo ""
+
+    # Check if nodejs will be updated
+if sudo apt-get --dry-run "$APT_COMMAND" | grep -qE "^Inst nodejs "; then
+    nodejs_update=true
+fi
+
+# Stop ioBroker before the OS upgrade if nodejs will change
+if [[ "$nodejs_update" == true ]]; then
+    if ! stop_iobroker; then
+        printf "${RED}Error: Failed to stop ioBroker properly.${NC}\n"
+        exit 1
+    fi
+fi
 
     printf "${YELLOW}2. Performing system upgrade...${NC}\n"
 
