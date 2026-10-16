@@ -168,6 +168,20 @@ if sudo apt-get --dry-run "$APT_COMMAND" | grep -qE "^Inst nodejs "; then
     nodejs_update=true
 fi
 
+# Stop ioBroker before upgrading nodejs
+if [[ "$nodejs_update" == true ]]; then
+    if ! stop_iobroker; then
+        printf "${RED}Error: Failed to stop ioBroker properly.${NC}\n"
+        exit 1
+    fi
+fi
+``
+
+    # Check if nodejs will be updated
+if sudo apt-get --dry-run "$APT_COMMAND" | grep -qE "^Inst nodejs "; then
+    nodejs_update=true
+fi
+
 # Stop ioBroker before the OS upgrade if nodejs will change
 if [[ "$nodejs_update" == true ]]; then
     if ! stop_iobroker; then
