@@ -25,7 +25,7 @@ if ! flock -n 200; then
 fi
 
 # Detect container environments
-if [ -f "/.dockerenv" ] || systemd-detect-virt -q --container 2>/dev/null; then
+if [[ -f "/.dockerenv" ]] || systemd-detect-virt -q --container 2>/dev/null; then
     IS_CONTAINER=true
 
     printf "${YELLOW}Container environment detected.${NC}\n"
@@ -89,7 +89,7 @@ set_node_capabilities() {
     return 0
 }
 
-# Function to stop ioBroker with timeout and progress bar
+# Stop ioBroker and wait until js-controller has terminated
 stop_iobroker() {
     printf "${YELLOW}Stopping ioBroker...${NC}\n"
 
