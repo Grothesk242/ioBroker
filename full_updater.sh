@@ -26,7 +26,8 @@ if ! flock -n 200; then
 fi
 
 # Detect container environments
-if [[ -f "/.dockerenv" ]] || systemd-detect-virt -q --container 2>/dev/null; then
+# if [[ -f "/.dockerenv" ]] || systemd-detect-virt -q --container 2>/dev/null; then
+if [[ -f "/.dockerenv" ]]; then
     IS_CONTAINER=true
 
     printf "${YELLOW}Container environment detected.${NC}\n"
