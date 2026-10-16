@@ -50,7 +50,7 @@ progress_bar() {
             printf " "
         fi
     done
-    printf "] %d%%" $progress
+    printf "] %d%%" "$progress"
     printf "\r"
 }
 
@@ -127,7 +127,7 @@ stop_iobroker() {
         elapsed=$((elapsed + 1))
     done
 
-    if [ $elapsed -ge $timeout ]; then
+    if [ $elapsed -ge "$timeout" ]; then
         # Finish the partially filled bar line before printing the error
         printf "\n"
         printf "${RED}Timeout: ioBroker did not stop within $timeout seconds.${NC}\n"
@@ -157,7 +157,7 @@ wait_for_js_controller_stop() {
     local elapsed=0
 
     while pgrep -f "iobroker.js-controller" >/dev/null; do
-        if [ $elapsed -ge $timeout ]; then
+        if [ $elapsed -ge "$timeout" ]; then
             printf "\n${RED}Timeout: js-controller did not stop within $timeout seconds.${NC}\n"
             return 1
         fi
@@ -177,7 +177,7 @@ wait_for_js_controller_start() {
     local elapsed=0
 
     while ! pgrep -f "iobroker.js-controller" >/dev/null; do
-        if [ $elapsed -ge $timeout ]; then
+        if [ $elapsed -ge "$timeout" ]; then
             printf "\n${RED}Timeout: js-controller did not start within $timeout seconds.${NC}\n"
             return 1
         fi
@@ -193,7 +193,7 @@ wait_for_js_controller_start() {
         if nc_result=$(nc -z localhost 8081 2>&1); then
             break
         fi
-        if [ $elapsed -ge $timeout ]; then
+        if [ $elapsed -ge "$timeout" ]; then
             printf "\n${RED}Timeout: js-controller did not become reachable within $timeout seconds.${NC}\n"
             return 1
         fi
