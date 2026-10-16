@@ -35,7 +35,7 @@ fi
 
 # Cleanup temporary files
 cleanup() {
-    [[ -n "${UPDATE_LOG:-}" ]] && rm -f "$UPDATE_LOG"
+    [[ -n "${UPDATE_LOG:-}" ]] && rm -f "${UPDATE_LOG:-}"
 }
 
 trap cleanup EXIT INT TERM
@@ -164,9 +164,9 @@ if [[ "$IS_CONTAINER" == false ]]; then
     echo ""
 
     # Check if nodejs will be updated
-if sudo apt-get --dry-run "$APT_COMMAND" | grep -qE "^Inst nodejs "; then
-    nodejs_update=true
-fi
+    if sudo apt-get --dry-run "$APT_COMMAND" | grep -qE "^Inst nodejs "; then
+        nodejs_update=true
+    fi
 
 # Stop ioBroker before upgrading nodejs
 if [[ "$nodejs_update" == true ]]; then
@@ -263,7 +263,7 @@ echo ""
 
 # Reboot check
 printf "${BLUE}=============================================================================${NC}\n"
-if [ -f "/var/run/reboot-required" ]; then
+if [[ -f "/var/run/reboot-required" ]]; then
     printf "${RED}IMPORTANT: The system needs to be REBOOTED to complete the changes!${NC}\n"
     echo ""
     printf "${YELLOW}Please execute the following command:${NC}\n"
