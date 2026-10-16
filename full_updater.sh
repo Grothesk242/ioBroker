@@ -40,8 +40,10 @@ cleanup() {
 
 trap cleanup EXIT INT TERM
 
-# Clear screen
-clear
+# Clear screen only when running interactively
+if [[ -t 1 ]]; then
+    clear || true
+fi
 
 # --- Capabilities ---
 # Installing/updating the nodejs package replaces the node binary, and file
@@ -92,16 +94,25 @@ set_node_capabilities() {
 
 # Stop ioBroker and wait until js-controller has terminated
 stop_iobroker() {
+    local stop_result=0
+
     printf "${YELLOW}Stopping ioBroker...${NC}\n"
 
-    if ! iobroker stop; then
-        printf "${RED}Error: iobroker stop returned an error.${NC}\n"
+    timeout --foreground --kill-after=10s \
+        "${STOP_TIMEOUT}s" iobroker stop || stop_result=$?
+
+    if ((stop_result != 0)); then
+        printf "${YELLOW}Warning: 'iobroker stop' returned status %d or exceeded the timeout. Checking whether js-controller has stopped nevertheless.${NC}\n" \
+            "$stop_result"
+    fi
+
+    if ! wait_for_js_controller_stop; then
+        printf "${RED}Error: js-controller is still running.${NC}\n"
         return 1
     fi
 
-    wait_for_js_controller_stop
+    return 0
 }
-
 # Function to wait until js-controller is fully stopped
 wait_for_js_controller_stop() {
     printf "${YELLOW}Waiting until js-controller is fully stopped...${NC}"
