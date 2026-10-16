@@ -270,8 +270,9 @@ if [[ -f "/var/run/reboot-required" ]]; then
     printf "${GREEN}sudo reboot${NC}\n"
 else
     printf "${GREEN}All updates have been installed successfully. No reboot required.${NC}\n"
-    if [[ "$nodejs_update" == true && "$IS_CONTAINER" == false ]]; then
-        printf "${YELLOW}Please review ioBroker logs carefully after a Node.js update. Native modules may require rebuilding.${NC}\n"
-    fi
+fi
+
+if [[ "$nodejs_update" == true && "$IS_CONTAINER" == false ]]; then
+    printf "${YELLOW}Please review ioBroker logs carefully after the Node.js update. Native modules may require rebuilding.${NC}\n"
 fi
 printf "${BLUE}=============================================================================${NC}\n"
