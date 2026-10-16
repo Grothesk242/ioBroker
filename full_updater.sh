@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -o pipefail
 
 # Define colors
 RED='\033[0;31m'
@@ -162,13 +163,6 @@ if [[ "$IS_CONTAINER" == false ]]; then
     printf "${GREEN}Done.${NC}\n"
     echo ""
 
-    if [[ "$nodejs_update" == true && "$IS_CONTAINER" == false ]]; then
-        if ! stop_iobroker; then
-            printf "${RED}Error: Failed to stop ioBroker properly.${NC}\n"
-            exit 1
-        fi
-    fi
-
     printf "${YELLOW}2. Performing system upgrade...${NC}\n"
 
     if ! sudo apt-get "$APT_COMMAND" -y; then
@@ -176,25 +170,12 @@ if [[ "$IS_CONTAINER" == false ]]; then
         exit 1
     fi
 
-printf "${GREEN}Done.${NC}\n"
-echo ""
-
-# Check if nodejs will be updated
-if sudo apt-get --dry-run "$APT_COMMAND" | grep -qE "^Inst nodejs "; then
-    nodejs_update=true
-fi
-
-if [[ "$nodejs_update" == true ]]; then
-    if ! stop_iobroker; then
-        printf "${RED}Error: Failed to stop ioBroker properly.${NC}\n"
-        exit 1
-    fi
-fi
+    printf "${GREEN}Done.${NC}\n"
+    echo ""
 
 else
 
     printf "${YELLOW}Skipping OS package updates because a container environment was detected.${NC}\n\n"
-    nodejs_update=false
 
 fi
 
@@ -221,9 +202,14 @@ if [[ "$nodejs_update" == true && "$IS_CONTAINER" == false ]]; then
 
 fi
 
-# 2. Check and install ioBroker updates
+# 3. Check and install ioBroker updates
 printf "${YELLOW}3. Checking for ioBroker updates...${NC}\n"
-UPDATE_LOG=$(mktemp -t full_updater.XXXXXX.log)
+
+UPDATE_LOG=$(mktemp -t full_updater.XXXXXX.log) || {
+    printf "${RED}Error: Failed to create temporary file.${NC}\n"
+    exit 1
+}
+
 iobroker update >"$UPDATE_LOG" 2>&1
 
 # Check if js-controller needs to be updated
