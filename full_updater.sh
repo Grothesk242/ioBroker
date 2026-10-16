@@ -186,10 +186,27 @@ else
 
 fi
 
-# Check if nodejs needs to be updated
-nodejs_update=false
-if sudo apt-get --dry-run "$APT_COMMAND" | grep -qE "^Inst nodejs "; then
-    nodejs_update=true
+# If nodejs was updated, restore capabilities and start ioBroker again
+if [[ "$nodejs_update" == true && "$IS_CONTAINER" == false ]]; then
+
+    printf "${YELLOW}nodejs has been updated. Restoring Node.js capabilities...${NC}\n"
+
+    if ! set_node_capabilities; then
+        printf "${YELLOW}Warning: Capabilities could not be set. ioBroker will still be started, but adapters that need privileged ports or raw sockets will not work until you run 'iob fix'.${NC}\n"
+    fi
+
+    printf "${YELLOW}Starting ioBroker...${NC}\n"
+
+    if ! iobroker start; then
+        printf "${RED}Error: Failed to start ioBroker.${NC}\n"
+        exit 1
+    fi
+
+    if ! wait_for_js_controller_start; then
+        printf "${RED}Error: ioBroker did not start properly.${NC}\n"
+        exit 1
+    fi
+
 fi
 
 # 2. Check and install ioBroker updates
