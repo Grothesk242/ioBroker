@@ -7,6 +7,23 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Prevent parallel execution
+LOCK_FILE="/var/lock/full_updater.lock"
+
+exec 200>"$LOCK_FILE"
+
+if ! flock -n 200; then
+    printf "${RED}Error: Another instance of full_updater is already running.${NC}\n"
+    exit 1
+fi
+
+# Cleanup temporary files
+cleanup() {
+    [[ -n "${UPDATE_LOG:-}" ]] && rm -f "$UPDATE_LOG"
+}
+
+trap cleanup EXIT INT TERM
+
 # Clear screen
 clear
 
@@ -94,7 +111,7 @@ stop_iobroker() {
     local progress=0
 
     # Show progress bar while waiting
-    while kill -0 $pid 2>/dev/null && [ $elapsed -lt $timeout ]; do
+    while kill -0 "$pid" 2>/dev/null && [ "$elapsed" -lt "$timeout" ]; do
         progress=$((elapsed * 100 / timeout))
         printf "["
         for ((i = 0; i < 20; i++)); do
@@ -114,7 +131,7 @@ stop_iobroker() {
         # Finish the partially filled bar line before printing the error
         printf "\n"
         printf "${RED}Timeout: ioBroker did not stop within $timeout seconds.${NC}\n"
-        kill -9 $pid 2>/dev/null
+        kill -9 "$pid" 2>/dev/null
         return 1
     fi
 
@@ -224,7 +241,7 @@ fi
 
 # 2. Perform system upgrade
 printf "${YELLOW}2. Performing system upgrade...${NC}\n"
-if ! sudo apt-get full-upgrade -y; then
+if ! sudo apt-get upgrade -y; then
     printf "${RED}Error: System upgrade failed.${NC}\n"
     exit 1
 fi
@@ -252,10 +269,11 @@ fi
 
 # 3. Check and install ioBroker updates
 printf "${YELLOW}3. Checking for ioBroker updates...${NC}\n"
-iobroker update >"/tmp/iobroker_updates.log" 2>&1
+UPDATE_LOG=$(mktemp /tmp/full_updater.XXXXXX.log)
+iobroker update >"$UPDATE_LOG" 2>&1
 
 # Check if js-controller needs to be updated
-if grep -q "js-controller.*Updatable" "/tmp/iobroker_updates.log"; then
+if grep -q "js-controller.*Updatable" "$UPDATE_LOG"; then
     printf "${YELLOW}js-controller needs to be updated. Stopping ioBroker...${NC}\n"
     if ! stop_iobroker; then
         printf "${RED}Error: Failed to stop ioBroker properly.${NC}\n"
