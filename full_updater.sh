@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+x#!/usr/bin/env bash
 set -euo pipefail
 
 # Define colors
@@ -25,12 +25,10 @@ if ! flock -n 200; then
     exit 1
 fi
 
-# Detect container environments
-# if [[ -f "/.dockerenv" ]] || systemd-detect-virt -q --container 2>/dev/null; then
-if [[ -f "/.dockerenv" ]]; then
+# Detect container environments (only Docker, not LXC)
+if [[ -f "/.dockerenv" ]] || [[ "$(systemd-detect-virt -q 2>/dev/null)" == "docker" ]]; then
     IS_CONTAINER=true
-
-    printf "${YELLOW}Container environment detected.${NC}\n"
+    printf "${YELLOW}Docker container detected.${NC}\n"
     printf "${YELLOW}OS package updates will be skipped.${NC}\n\n"
 fi
 
@@ -47,10 +45,6 @@ if [[ -t 1 ]]; then
 fi
 
 # --- Capabilities ---
-# Installing/updating the nodejs package replaces the node binary, and file
-# capabilities do not survive that. Re-grant what install_necessary_packages
-# in installer_library.sh grants, otherwise adapters that need privileged
-# ports or raw sockets (ping, BLE, ports below 1024) stop working.
 set_node_capabilities() {
     local node_bin
     node_bin=$(readlink -f "$(command -v node)" 2>/dev/null || echo "")
@@ -59,10 +53,6 @@ set_node_capabilities() {
         return 1
     fi
 
-    # A capability missing from the bounding set (a container started without
-    # --cap-add=NET_ADMIN, for example) must not be granted: the kernel would
-    # then refuse to start node at all. Bits: 10 = cap_net_bind_service,
-    # 12 = cap_net_admin, 13 = cap_net_raw.
     local capbnd caps=() name bit
     capbnd=$(awk '/^CapBnd:/ {print $2}' /proc/self/status 2>/dev/null || echo "")
     for name in cap_net_admin:12 cap_net_bind_service:10 cap_net_raw:13; do
@@ -88,7 +78,7 @@ set_node_capabilities() {
         printf "${RED}Error: Failed to set the capabilities. Adapters that need privileged ports or raw sockets will not work until you run 'iob fix'.${NC}\n"
         return 1
     fi
-    printf "${GREEN}Done.${NC}\n"
+    printf "${GREEN}Done.${NC}\n\n"
     echo ""
     return 0
 }
@@ -97,7 +87,7 @@ set_node_capabilities() {
 stop_iobroker() {
     local stop_result=0
 
-    printf "${YELLOW}Stopping ioBroker...${NC}\n"
+    printf "${YELLOW}Stopping ioBroker...${NC}\n\n"
 
     timeout --foreground --kill-after=10s \
         "${STOP_TIMEOUT}s" iobroker stop || stop_result=$?
@@ -114,10 +104,10 @@ stop_iobroker() {
 
     return 0
 }
+
 # Function to wait until js-controller is fully stopped
 wait_for_js_controller_stop() {
     printf "${YELLOW}Waiting until js-controller is fully stopped...${NC}"
-
     local elapsed=0
 
     while pgrep -f "iobroker.js-controller" >/dev/null; do
@@ -138,22 +128,47 @@ wait_for_js_controller_stop() {
 # Function to wait until js-controller is fully started
 wait_for_js_controller_start() {
     printf "${YELLOW}Waiting until js-controller is fully started...${NC}"
-
     local elapsed=0
 
-    while ! pgrep -f "iobroker.js-controller" >/dev/null; do
-        if [ "$elapsed" -ge "$START_TIMEOUT" ]; then
-            printf "\n${RED}Timeout: js-controller did not start within ${START_TIMEOUT} seconds.${NC}\n"
+    # Get hostname from iobroker.json or fallback to `hostname`
+    local IOB_HOST
+    IOB_HOST=$(
+        grep -o '"system.hostname"[[:space:]]*:[[:space:]]*"[^"]*"' /opt/iobroker/iobroker-data/iobroker.json 2>/dev/null |
+            sed -n 's/.*"system.hostname"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' ||
+            hostname
+    )
+
+    while true; do
+        if [[ "$elapsed" -ge "$START_TIMEOUT" ]]; then
+            printf "\n${RED}Timeout: js-controller did not become alive within ${START_TIMEOUT} seconds.${NC}\n"
             return 1
         fi
 
-        printf "."
-        sleep 1
-        elapsed=$((elapsed + 1))
-    done
+        # Check if host is alive
+        local alive_status
+        alive_status=$(iobroker state getvalue "system.host.${IOB_HOST}.alive" 2>/dev/null || echo "false")
 
-    printf "\n${GREEN}Done.${NC}\n\n"
-    return 0
+        if [[ "$alive_status" == "true" ]]; then
+            # Additional wait time after upgrade
+            sleep 5
+            printf "\n${GREEN}Done.${NC}\n\n"
+            return 0
+        fi
+
+        printf "."
+        sleep 2
+        elapsed=$((elapsed + 2))
+    done
+}
+
+# Check if this is a Multihost Slave
+is_multihost_slave() {
+    local host_type
+    host_type=$(
+        grep -o '"system.hostType"[[:space:]]*:[[:space:]]*"[^"]*"' /opt/iobroker/iobroker-data/iobroker.json 2>/dev/null |
+            sed -n 's/.*"system.hostType"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'
+    )
+    [[ "$host_type" == "slave" ]]
 }
 
 # Header
@@ -165,7 +180,7 @@ echo ""
 # 1. Update package lists
 if [[ "$IS_CONTAINER" == false ]]; then
 
-    printf "${YELLOW}1. Updating package lists...${NC}\n"
+    printf "${YELLOW}1. Updating package lists...${NC}\n\n"
 
     if ! sudo apt-get update; then
         printf "${RED}Error: Failed to update package lists.${NC}\n"
@@ -188,7 +203,7 @@ if [[ "$IS_CONTAINER" == false ]]; then
         fi
     fi
 
-    printf "${YELLOW}2. Performing system upgrade...${NC}\n"
+    printf "${YELLOW}2. Performing system upgrade...${NC}\n\n"
 
     if ! sudo apt-get "$APT_COMMAND" -y; then
         printf "${RED}Error: System upgrade failed.${NC}\n"
@@ -200,20 +215,20 @@ if [[ "$IS_CONTAINER" == false ]]; then
 
 else
 
-    printf "${YELLOW}Skipping OS package updates because a container environment was detected.${NC}\n\n"
+    printf "${YELLOW}Skipping OS package updates because a Docker container was detected.${NC}\n\n"
 
 fi
 
 # If nodejs was updated, restore capabilities and start ioBroker again
 if [[ "$nodejs_update" == true && "$IS_CONTAINER" == false ]]; then
 
-    printf "${YELLOW}nodejs has been updated. Restoring Node.js capabilities...${NC}\n"
+    printf "${YELLOW}nodejs has been updated. Restoring Node.js capabilities...${NC}\n\n"
 
     if ! set_node_capabilities; then
         printf "${YELLOW}Warning: Capabilities could not be set. ioBroker will still be started, but adapters that need privileged ports or raw sockets will not work until you run 'iob fix'.${NC}\n"
     fi
 
-    printf "${YELLOW}Starting ioBroker...${NC}\n"
+    printf "${YELLOW}Starting ioBroker...${NC}\n\n"
 
     if ! iobroker start; then
         printf "${RED}Error: Failed to start ioBroker.${NC}\n"
@@ -224,43 +239,47 @@ if [[ "$nodejs_update" == true && "$IS_CONTAINER" == false ]]; then
         printf "${RED}Error: ioBroker did not start properly.${NC}\n"
         exit 1
     fi
-
 fi
 
 # 3. Check and install ioBroker updates
-printf "${YELLOW}3. Checking for ioBroker updates...${NC}\n"
+printf "${YELLOW}3. Checking for ioBroker updates...${NC}\n\n"
 
 UPDATE_LOG=$(mktemp -t full_updater.XXXXXX.log) || {
     printf "${RED}Error: Failed to create temporary file.${NC}\n"
     exit 1
 }
-
 iobroker update >"$UPDATE_LOG" 2>&1
 
 # Check if js-controller needs to be updated
 if grep -q "js-controller.*Updatable" "$UPDATE_LOG"; then
-    printf "${YELLOW}js-controller needs to be updated. Stopping ioBroker...${NC}\n"
-    if ! stop_iobroker; then
-        printf "${RED}Error: Failed to stop ioBroker properly.${NC}\n"
-        exit 1
-    fi
+    # Skip upgrade self on Multihost Slave
+    if is_multihost_slave; then
+        printf "${YELLOW}Warning: This is a Multihost Slave. Skipping 'upgrade self' to avoid version conflicts with the Master.${NC}\n"
+    else
+        printf "${YELLOW}js-controller needs to be updated. Stopping ioBroker...${NC}\n"
 
-    printf "${YELLOW}Updating js-controller...${NC}\n"
-    if ! iobroker upgrade self; then
-        printf "${RED}Error: Failed to update js-controller.${NC}\n"
-        exit 1
-    fi
-    printf "${GREEN}Done.${NC}\n"
-    echo ""
+        if ! stop_iobroker; then
+            printf "${RED}Error: Failed to stop ioBroker properly.${NC}\n"
+            exit 1
+        fi
 
-    printf "${YELLOW}Starting ioBroker...${NC}\n"
-    if ! iobroker start; then
-        printf "${RED}Error: Failed to start ioBroker.${NC}\n"
-        exit 1
-    fi
-    if ! wait_for_js_controller_start; then
-        printf "${RED}Error: ioBroker did not start properly.${NC}\n"
-        exit 1
+        printf "${YELLOW}Updating js-controller...${NC}\n"
+        if ! iobroker upgrade self; then
+            printf "${RED}Error: Failed to update js-controller.${NC}\n"
+            exit 1
+        fi
+        printf "${GREEN}Done.${NC}\n"
+        echo ""
+
+        printf "${YELLOW}Starting ioBroker...${NC}\n"
+        if ! iobroker start; then
+            printf "${RED}Error: Failed to start ioBroker.${NC}\n"
+            exit 1
+        fi
+        if ! wait_for_js_controller_start; then
+            printf "${RED}Error: ioBroker did not start properly.${NC}\n"
+            exit 1
+        fi
     fi
 fi
 
