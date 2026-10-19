@@ -1,4 +1,4 @@
-x#!/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # Define colors
@@ -254,7 +254,10 @@ iobroker update >"$UPDATE_LOG" 2>&1
 if grep -q "js-controller.*Updatable" "$UPDATE_LOG"; then
     # Skip upgrade self on Multihost Slave
     if is_multihost_slave; then
-        printf "${YELLOW}Warning: This is a Multihost Slave. Skipping 'upgrade self' to avoid version conflicts with the Master.${NC}\n"
+        printf "${YELLOW}Warning: This is a Multihost Slave.${NC}\n"
+        printf "${YELLOW}To update a Multihost Slave, you must first update the Master system.${NC}\n"
+        printf "${YELLOW}After the Master is updated, manually run the following command on each Slave:${NC}\n"
+        printf "${GREEN}iob upgrade self${NC}\n\n"
     else
         printf "${YELLOW}js-controller needs to be updated. Stopping ioBroker...${NC}\n"
 
