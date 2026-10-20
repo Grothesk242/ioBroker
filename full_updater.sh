@@ -26,11 +26,11 @@ if ! flock -n 200; then
     exit 1
 fi
 
-# Detect container environments (only Docker, not LXC)
+# Detect Docker containers only (where apt-get should not be used)
 if [[ -f "/.dockerenv" ]] || [[ "$(systemd-detect-virt --container 2>/dev/null)" == "docker" ]]; then
     IS_CONTAINER=true
     printf "${YELLOW}Docker container detected.${NC}\n"
-    printf "${YELLOW}OS package updates will be skipped.${NC}\n\n"
+    printf "${YELLOW}OS package updates (apt-get) will be skipped.${NC}\n\n"
 fi
 
 # Cleanup temporary files and restart ioBroker if it was stopped
