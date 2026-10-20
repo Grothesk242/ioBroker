@@ -14,6 +14,7 @@ START_TIMEOUT=120
 APT_COMMAND="upgrade"
 IS_CONTAINER=false
 nodejs_update=false
+IOB_WAS_STOPPED=false # Track if ioBroker was stopped to restart on error
 
 # Prevent parallel execution
 LOCK_FILE="/tmp/full_updater.lock"
@@ -26,15 +27,19 @@ if ! flock -n 200; then
 fi
 
 # Detect container environments (only Docker, not LXC)
-if [[ -f "/.dockerenv" ]] || [[ "$(systemd-detect-virt -q 2>/dev/null)" == "docker" ]]; then
+if [[ -f "/.dockerenv" ]] || [[ "$(systemd-detect-virt --container 2>/dev/null)" == "docker" ]]; then
     IS_CONTAINER=true
     printf "${YELLOW}Docker container detected.${NC}\n"
     printf "${YELLOW}OS package updates will be skipped.${NC}\n\n"
 fi
 
-# Cleanup temporary files
+# Cleanup temporary files and restart ioBroker if it was stopped
 cleanup() {
     [[ -n "${UPDATE_LOG:-}" ]] && rm -f "${UPDATE_LOG:-}"
+    if [[ "$IOB_WAS_STOPPED" == true ]]; then
+        printf "${YELLOW}Restarting ioBroker after error...${NC}\n"
+        iobroker start >/dev/null 2>&1 || true
+    fi
 }
 
 trap cleanup EXIT INT TERM
@@ -102,6 +107,7 @@ stop_iobroker() {
         return 1
     fi
 
+    IOB_WAS_STOPPED=true
     return 0
 }
 
@@ -130,13 +136,9 @@ wait_for_js_controller_start() {
     printf "${YELLOW}Waiting until js-controller is fully started...${NC}"
     local elapsed=0
 
-    # Get hostname from iobroker.json or fallback to `hostname`
+    # Get hostname from iobroker.json using node (handles nested JSON)
     local IOB_HOST
-    IOB_HOST=$(
-        grep -o '"system.hostname"[[:space:]]*:[[:space:]]*"[^"]*"' /opt/iobroker/iobroker-data/iobroker.json 2>/dev/null |
-            sed -n 's/.*"system.hostname"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' ||
-            hostname
-    )
+    IOB_HOST=$(node -e 'const c=require("/opt/iobroker/iobroker-data/iobroker.json");console.log((c.system&&c.system.hostname)||require("os").hostname())' 2>/dev/null || hostname)
 
     while true; do
         if [[ "$elapsed" -ge "$START_TIMEOUT" ]]; then
@@ -161,14 +163,9 @@ wait_for_js_controller_start() {
     done
 }
 
-# Check if this is a Multihost Slave
+# Check if this is a Multihost Slave (using node to parse JSON)
 is_multihost_slave() {
-    local host_type
-    host_type=$(
-        grep -o '"system.hostType"[[:space:]]*:[[:space:]]*"[^"]*"' /opt/iobroker/iobroker-data/iobroker.json 2>/dev/null |
-            sed -n 's/.*"system.hostType"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'
-    )
-    [[ "$host_type" == "slave" ]]
+    node -e 'const c=require("/opt/iobroker/iobroker-data/iobroker.json");console.log((c.system&&c.system.hostType=="slave")?"true":"false")' 2>/dev/null | grep -q "true"
 }
 
 # Header
@@ -239,6 +236,7 @@ if [[ "$nodejs_update" == true && "$IS_CONTAINER" == false ]]; then
         printf "${RED}Error: ioBroker did not start properly.${NC}\n"
         exit 1
     fi
+    IOB_WAS_STOPPED=false
 fi
 
 # 3. Check and install ioBroker updates
@@ -248,7 +246,7 @@ UPDATE_LOG=$(mktemp -t full_updater.XXXXXX.log) || {
     printf "${RED}Error: Failed to create temporary file.${NC}\n"
     exit 1
 }
-iobroker update >"$UPDATE_LOG" 2>&1
+iobroker update >"$UPDATE_LOG" 2>&1 || true
 
 # Check if js-controller needs to be updated
 if grep -q "js-controller.*Updatable" "$UPDATE_LOG"; then
@@ -283,6 +281,7 @@ if grep -q "js-controller.*Updatable" "$UPDATE_LOG"; then
             printf "${RED}Error: ioBroker did not start properly.${NC}\n"
             exit 1
         fi
+        IOB_WAS_STOPPED=false
     fi
 fi
 
