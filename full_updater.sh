@@ -294,18 +294,34 @@ fi
 printf "${GREEN}Done.${NC}\n"
 echo ""
 
-# Reboot check
-printf "${BLUE}=============================================================================${NC}\n"
-if [[ -f "/var/run/reboot-required" ]]; then
-    printf "${RED}IMPORTANT: The system needs to be REBOOTED to complete the changes!${NC}\n"
-    echo ""
-    printf "${YELLOW}Please execute the following command:${NC}\n"
-    printf "${GREEN}sudo reboot${NC}\n"
-else
-    printf "${GREEN}All updates have been installed successfully. No reboot required.${NC}\n"
-fi
+# Prüft, ob ein Debian-Paket wirklich installiert ist
+pkg_installed() {
+    dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q 'ok installed'
+}
 
-if [[ "$nodejs_update" == true && "$IS_CONTAINER" == false ]]; then
-    printf "${YELLOW}Please review ioBroker logs carefully after the Node.js update. Native modules may require rebuilding.${NC}\n"
-fi
-printf "${BLUE}=============================================================================${NC}\n"
+reboot_check() {
+    printf "${BLUE}=============================================================================${NC}\n"
+
+    # --- Check: benötigte Pakete -------------------------------------------
+    local missing=()
+    pkg_installed reboot-notifier || missing+=(reboot-notifier)
+    pkg_installed needrestart || missing+=(needrestart)
+
+    if ((${#missing[@]} > 0)); then
+        printf "${YELLOW}NOTE: Reboot detection is incomplete, the following package(s) are missing:${NC}\n"
+        printf "${YELLOW}  %s${NC}\n" "${missing[*]}"
+        printf "${YELLOW}Please install with:${NC}\n"
+        printf "${GREEN}  sudo apt install %s${NC}\n" "${missing[*]}"
+        echo ""
+    fi
+
+    # --- Check: Reboot-Marker ----------------------------------------------
+    if [[ -f /var/run/reboot-required ]]; then
+        printf "${RED}IMPORTANT: The system needs to be REBOOTED to complete the changes!${NC}\n"
+        echo ""
+        printf "${YELLOW}Please execute the following command:${NC}\n"
+        printf "${GREEN}sudo reboot${NC}\n"
+    else
+        printf "${GREEN}All updates have been installed successfully. No reboot required.${NC}\n"
+    fi
+}
