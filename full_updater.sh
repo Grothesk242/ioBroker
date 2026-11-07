@@ -168,6 +168,38 @@ is_multihost_slave() {
     node -e 'const c=require("/opt/iobroker/iobroker-data/iobroker.json");console.log((c.system&&c.system.hostType=="slave")?"true":"false")' 2>/dev/null | grep -q "true"
 }
 
+# Prüft, ob ein Debian-Paket wirklich installiert ist
+pkg_installed() {
+    dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q 'ok installed'
+}
+
+reboot_check() {
+    printf "${BLUE}=============================================================================${NC}\n"
+
+    # --- Check: benötigte Pakete -------------------------------------------
+    local missing=()
+    pkg_installed reboot-notifier || missing+=(reboot-notifier)
+    pkg_installed needrestart || missing+=(needrestart)
+
+    if ((${#missing[@]} > 0)); then
+        printf "${YELLOW}NOTE: Reboot detection is incomplete, the following package(s) are missing:${NC}\n"
+        printf "${YELLOW}  %s${NC}\n" "${missing[*]}"
+        printf "${YELLOW}Please install with:${NC}\n"
+        printf "${GREEN}  sudo apt install %s${NC}\n" "${missing[*]}"
+        echo ""
+    fi
+
+    # --- Check: Reboot-Marker ----------------------------------------------
+    if [[ -f /var/run/reboot-required ]]; then
+        printf "${RED}IMPORTANT: The system needs to be REBOOTED to complete the changes!${NC}\n"
+        echo ""
+        printf "${YELLOW}Please execute the following command:${NC}\n"
+        printf "${GREEN}sudo reboot${NC}\n"
+    else
+        printf "${GREEN}All updates have been installed successfully. No reboot required.${NC}\n"
+    fi
+}
+
 # Header
 printf "${BLUE}=============================================================================${NC}\n"
 printf "${BLUE}===                         System Update Script                        ===${NC}\n"
@@ -294,34 +326,9 @@ fi
 printf "${GREEN}Done.${NC}\n"
 echo ""
 
-# Prüft, ob ein Debian-Paket wirklich installiert ist
-pkg_installed() {
-    dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q 'ok installed'
-}
-
-reboot_check() {
-    printf "${BLUE}=============================================================================${NC}\n"
-
-    # --- Check: benötigte Pakete -------------------------------------------
-    local missing=()
-    pkg_installed reboot-notifier || missing+=(reboot-notifier)
-    pkg_installed needrestart || missing+=(needrestart)
-
-    if ((${#missing[@]} > 0)); then
-        printf "${YELLOW}NOTE: Reboot detection is incomplete, the following package(s) are missing:${NC}\n"
-        printf "${YELLOW}  %s${NC}\n" "${missing[*]}"
-        printf "${YELLOW}Please install with:${NC}\n"
-        printf "${GREEN}  sudo apt install %s${NC}\n" "${missing[*]}"
-        echo ""
-    fi
-
-    # --- Check: Reboot-Marker ----------------------------------------------
-    if [[ -f /var/run/reboot-required ]]; then
-        printf "${RED}IMPORTANT: The system needs to be REBOOTED to complete the changes!${NC}\n"
-        echo ""
-        printf "${YELLOW}Please execute the following command:${NC}\n"
-        printf "${GREEN}sudo reboot${NC}\n"
-    else
-        printf "${GREEN}All updates have been installed successfully. No reboot required.${NC}\n"
-    fi
-}
+# 4. Check if a reboot is required (skipped in Docker containers)
+if [[ "$IS_CONTAINER" == false ]]; then
+    printf "${YELLOW}4. Checking reboot requirements...${NC}\n\n"
+    reboot_check
+    echo ""
+fi
